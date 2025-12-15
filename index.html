@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Deck MVP – Browser Telemetry</title>
+<title>Deck Dash – Browser Telemetry MVP</title>
 
 <!-- Google Font: Roboto -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,33 +19,31 @@
     --muted: rgba(255, 255, 255, 0.6);
   }
 
-  * { box-sizing: border-box; }
-
-  body {
+  /* Make the page fill the iframe */
+  html, body {
+    width: 100%;
+    height: 100%;
     margin: 0;
+    padding: 0;
+    overflow: hidden;
     background: #000;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: "Roboto", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Roboto", system-ui, -apple-system, sans-serif;
     color: #fff;
   }
 
+  /* Deck now fills the parent frame (iframe or window) */
   .deck {
-    width: min(92vw, 980px);
-    aspect-ratio: 16 / 9;
+    width: 100%;
+    height: 100%;
     background: var(--deck-bg);
-    border-radius: 20px;
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.88);
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
 
-  /* TOP SCREEN */
+  /* TOP SCREEN AREA */
   .deck-screen {
-    flex: 3;
+    flex: 3.5;
     background: radial-gradient(circle at top, #262a34, #050608 60%);
     padding: clamp(16px, 2.2vh, 24px);
     display: flex;
@@ -79,19 +77,15 @@
 
   .screen-header-mode {
     font-weight: 500;
-    color: #fff;
   }
 
   .screen-header-time {
     font-feature-settings: "tnum";
-    font-variant-numeric: tabular-nums;
   }
 
+  /* MAIN PANEL AREA */
   .screen-panels {
     flex: 1;
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr;
     position: relative;
   }
 
@@ -101,10 +95,10 @@
     opacity: 0;
     pointer-events: none;
     transform: translateY(5px);
-    transition: opacity 160ms ease, transform 160ms ease;
+    transition: opacity 150ms ease, transform 150ms ease;
     display: flex;
     flex-direction: column;
-    gap: clamp(10px, 1.4vh, 16px);
+    gap: clamp(12px, 2vh, 18px);
   }
 
   .screen-panel.active {
@@ -115,241 +109,169 @@
 
   .grid-2 {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(10px, 1.4vh, 14px) clamp(12px, 1.8vw, 18px);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(14px, 2vw, 24px);
   }
 
   .stat-card {
-    background: rgba(5, 6, 10, 0.9);
+    background: rgba(12, 14, 18, 0.9);
     border-radius: 14px;
-    padding: clamp(10px, 1.4vh, 14px) clamp(12px, 1.6vw, 16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: clamp(12px, 1.5vh, 16px) clamp(14px, 1.5vw, 20px);
+    border: 1px solid rgba(255,255,255,0.05);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
 
   .stat-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: clamp(0.55rem, 0.85vw, 0.7rem);
+    gap: 10px;
+    font-size: clamp(0.55rem, 1vw, 0.75rem);
     text-transform: uppercase;
-    letter-spacing: 0.14em;
     color: var(--muted);
-    font-weight: 400;
+    letter-spacing: 0.1em;
   }
 
   .stat-icon {
     width: 18px;
     height: 18px;
-    flex-shrink: 0;
-    opacity: 0.9;
   }
 
   .stat-main {
     display: flex;
     align-items: baseline;
-    gap: 6px;
-    margin-top: 2px;
+    gap: 8px;
   }
 
   .stat-value {
-    font-size: clamp(1.1rem, 2.3vw, 1.6rem);
+    font-size: clamp(1.2rem, 2.8vw, 2rem);
     font-weight: 500;
     font-feature-settings: "tnum";
-    font-variant-numeric: tabular-nums;
   }
 
   .stat-unit {
-    font-size: clamp(0.6rem, 1vw, 0.8rem);
+    font-size: clamp(0.6rem, 1.2vw, 0.9rem);
     color: var(--muted);
   }
 
   .stat-sub {
-    margin-top: 2px;
-    font-size: clamp(0.55rem, 0.9vw, 0.75rem);
+    font-size: clamp(0.55rem, 1vw, 0.75rem);
     color: var(--muted);
-    font-weight: 300;
   }
 
   .pill-row {
     display: flex;
-    flex-wrap: wrap;
     gap: 6px;
-    margin-top: 4px;
+    flex-wrap: wrap;
   }
 
   .pill {
-    border-radius: 999px;
     padding: 2px 8px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    font-size: clamp(0.5rem, 0.8vw, 0.7rem);
-    color: var(--muted);
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    font-size: clamp(0.5rem, 1vw, 0.7rem);
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-weight: 400;
   }
 
   .pill-strong {
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255,255,255,0.12);
   }
 
   /* LOWER HARDWARE SHELL */
   .deck-shell {
-    flex: 1.1;
+    flex: 1;
     background: linear-gradient(to bottom, var(--shell-bg-top), var(--shell-bg-bottom));
-    padding: clamp(8px, 1.3vh, 14px) clamp(14px, 2vw, 24px);
+    padding: clamp(10px, 1.5vh, 18px) clamp(14px, 2vw, 28px);
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: clamp(6px, 0.9vh, 10px);
+    justify-content: space-between;
+    align-items: center;
   }
 
   .status-strip {
-    background: var(--status-bg);
-    border-radius: 999px;
-    padding: clamp(6px, 0.8vh, 8px) clamp(12px, 2vw, 18px);
     display: flex;
+    gap: clamp(14px, 2vw, 30px);
     align-items: center;
-    gap: clamp(10px, 1.5vw, 22px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .status-items {
-    flex: 1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px clamp(10px, 1.5vw, 16px);
-    font-size: clamp(0.55rem, 1vw, 0.75rem);
-    color: rgba(255, 255, 255, 0.82);
   }
 
   .status-item {
-    display: inline-flex;
+    display: flex;
+    gap: 6px;
     align-items: center;
-    gap: 4px;
-    white-space: nowrap;
+    font-size: clamp(0.55rem, 1vw, 0.75rem);
+    color: rgba(255,255,255,0.8);
   }
 
   .status-label {
-    opacity: 0.6;
+    color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-size: 0.75em;
-    font-weight: 400;
+    font-size: 0.68em;
   }
 
   .status-value {
     font-weight: 500;
-    font-feature-settings: "tnum";
-    font-variant-numeric: tabular-nums;
   }
 
   .status-dot {
     width: 7px;
     height: 7px;
-    border-radius: 999px;
+    border-radius: 50%;
     background: var(--accent-soft);
   }
 
+  /* Knob */
   .dial-wrapper {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    position: relative;
   }
 
   .dial-button {
-    position: relative;
+    width: clamp(54px, 6vh, 70px);
+    aspect-ratio: 1/1;
+    border-radius: 50%;
     border: none;
-    outline: none;
+    background: radial-gradient(circle at 30% 30%, #6f7078, #1b1c22);
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.7), 0 8px 16px rgba(0,0,0,0.6);
     cursor: pointer;
-    width: min(64px, 12vh, 14vw);
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #5a5f69, #12141a);
-    box-shadow:
-      0 0 0 2px #000,
-      0 0 0 5px #22242b,
-      0 14px 26px rgba(0, 0, 0, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 120ms ease, box-shadow 120ms ease;
-  }
-
-  .dial-button::after {
-    content: "";
-    width: 18%;
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #ffffff, #777777);
-    opacity: 0.35;
-  }
-
-  .dial-button:active {
-    transform: translateY(1px) scale(0.985);
-    box-shadow:
-      0 0 0 2px #000,
-      0 0 0 5px #22242b,
-      0 6px 16px rgba(0, 0, 0, 0.92);
   }
 
   .dial-label {
     position: absolute;
-    bottom: -18px;
+    top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    font-size: clamp(0.5rem, 0.85vw, 0.7rem);
+    margin-top: 6px;
+    font-size: clamp(0.5rem, 1vw, 0.75rem);
     color: var(--muted);
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
-    white-space: nowrap;
-    font-weight: 400;
-  }
-
-  @media (max-width: 640px) {
-    .grid-2 { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
-<!-- SIMPLE ICONS (inline SVG) -->
+<!-- ICONS -->
 <svg width="0" height="0" style="position:absolute; visibility:hidden">
   <defs>
     <symbol id="icon-cpu" viewBox="0 0 24 24">
-      <rect x="6" y="6" width="12" height="12" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.7"/>
-      <rect x="10" y="10" width="4" height="4" rx="1" ry="1" fill="currentColor"/>
-      <path d="M9 2v3m6-3v3M9 19v3m6-3v3M2 9h3m-3 6h3m16-6h-3m3 6h-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" fill="none"/>
+      <rect x="10" y="10" width="4" height="4" fill="currentColor"/>
     </symbol>
+
     <symbol id="icon-ram" viewBox="0 0 24 24">
-      <rect x="3" y="7" width="18" height="10" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.7"/>
-      <rect x="6" y="9" width="3" height="6" rx="1" ry="1" fill="currentColor"/>
-      <rect x="11" y="9" width="3" height="6" rx="1" ry="1" fill="currentColor"/>
-      <rect x="16" y="9" width="3" height="6" rx="1" ry="1" fill="currentColor"/>
-      <path d="M7 19v2m4-2v2m4-2v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <rect x="3" y="7" width="18" height="10" rx="2" stroke="currentColor" fill="none"/>
     </symbol>
+
     <symbol id="icon-fps" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.7"/>
-      <path d="M12 9v4l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M5 5l2 2m12-2-2 2m-12 10 2-2m10 2-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="7" stroke="currentColor" fill="none"/>
     </symbol>
+
     <symbol id="icon-battery" viewBox="0 0 24 24">
-      <rect x="5" y="8" width="13" height="9" rx="1.8" ry="1.8" fill="none" stroke="currentColor" stroke-width="1.7"/>
-      <rect x="19" y="10" width="2" height="5" rx="0.6" ry="0.6" fill="currentColor"/>
-      <polyline points="10 10.5 8.7 13 11 13 9.7 15.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="5" y="8" width="13" height="9" rx="2" stroke="currentColor" fill="none"/>
     </symbol>
+
     <symbol id="icon-network" viewBox="0 0 24 24">
-      <path d="M3 10a13 13 0 0 1 18 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-      <path d="M6 13a9 9 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-      <path d="M9 16a5 5 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-      <circle cx="12" cy="18.5" r="0.9" fill="currentColor"/>
-    </symbol>
-    <symbol id="icon-power" viewBox="0 0 24 24">
-      <path d="M12 4v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M7.5 6.5A7 7 0 1 0 16.5 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M3 10a13 13 0 0 1 18 0" stroke="currentColor" fill="none"/>
     </symbol>
   </defs>
 </svg>
@@ -371,38 +293,34 @@
           <div class="stat-card">
             <div class="stat-header">
               <svg class="stat-icon"><use href="#icon-cpu"></use></svg>
-              <span>CPU Threads</span>
+              CPU Threads
             </div>
             <div class="stat-main">
               <div class="stat-value" id="cpu-cores">--</div>
               <div class="stat-unit">logical</div>
             </div>
-            <div class="stat-sub">navigator.hardwareConcurrency</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
               <svg class="stat-icon"><use href="#icon-ram"></use></svg>
-              <span>Device Memory</span>
+              Device Memory
             </div>
             <div class="stat-main">
               <div class="stat-value" id="device-memory">--</div>
-              <div class="stat-unit">GB (approx)</div>
+              <div class="stat-unit">GB</div>
             </div>
-            <div class="stat-sub" id="device-memory-note">navigator.deviceMemory</div>
           </div>
         </div>
 
         <div class="stat-card">
           <div class="stat-header">
-            <svg class="stat-icon"><use href="#icon-power"></use></svg>
-            <span>Page Uptime & Platform</span>
+            Page Uptime & Platform
           </div>
           <div class="stat-main">
             <div class="stat-value" id="uptime-seconds">0</div>
             <div class="stat-unit">seconds</div>
           </div>
-          <div class="stat-sub">Time since this dashboard loaded.</div>
           <div class="pill-row">
             <div class="pill pill-strong" id="ua-platform"></div>
             <div class="pill" id="ua-browser"></div>
@@ -414,307 +332,213 @@
       <div class="screen-panel" data-mode="performance">
         <div class="grid-2">
           <div class="stat-card">
-            <div class="stat-header">
-              <svg class="stat-icon"><use href="#icon-fps"></use></svg>
-              <span>Render FPS</span>
-            </div>
+            <div class="stat-header"><svg class="stat-icon"><use href="#icon-fps"></use></svg>Frames Per Second</div>
             <div class="stat-main">
               <div class="stat-value" id="fps-value">--</div>
-              <div class="stat-unit">frames / sec</div>
-            </div>
-            <div class="stat-sub">
-              Measured from requestAnimationFrame for this page only.
+              <div class="stat-unit">FPS</div>
             </div>
           </div>
 
           <div class="stat-card">
-            <div class="stat-header">
-              <svg class="stat-icon"><use href="#icon-cpu"></use></svg>
-              <span>Frame Time</span>
-            </div>
+            <div class="stat-header"><svg class="stat-icon"><use href="#icon-fps"></use></svg>Frame Time</div>
             <div class="stat-main">
               <div class="stat-value" id="ms-per-frame">--</div>
-              <div class="stat-unit">ms (avg)</div>
+              <div class="stat-unit">ms</div>
             </div>
-            <div class="stat-sub">Approximate time between frames.</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <svg class="stat-icon"><use href="#icon-ram"></use></svg>
-            <span>Performance Timings</span>
-          </div>
-          <div class="stat-sub" id="perf-timings">
-            Loading metrics not available.
           </div>
         </div>
       </div>
 
       <!-- PANEL 3: POWER & NETWORK -->
       <div class="screen-panel" data-mode="power">
+
         <div class="grid-2">
           <div class="stat-card">
-            <div class="stat-header">
-              <svg class="stat-icon"><use href="#icon-battery"></use></svg>
-              <span>Battery</span>
-            </div>
+            <div class="stat-header"><svg class="stat-icon"><use href="#icon-battery"></use></svg>Battery</div>
             <div class="stat-main">
               <div class="stat-value" id="battery-level">--</div>
               <div class="stat-unit">%</div>
             </div>
-            <div class="stat-sub" id="battery-status">Battery API not available.</div>
+            <div class="stat-sub" id="battery-status">Battery API not supported</div>
           </div>
 
           <div class="stat-card">
-            <div class="stat-header">
-              <svg class="stat-icon"><use href="#icon-network"></use></svg>
-              <span>Network</span>
-            </div>
+            <div class="stat-header"><svg class="stat-icon"><use href="#icon-network"></use></svg>Network</div>
             <div class="stat-main">
               <div class="stat-value" id="network-type">--</div>
               <div class="stat-unit" id="network-downlink">--</div>
             </div>
-            <div class="stat-sub" id="network-note">
-              Network Information API not available.
-            </div>
+            <div class="stat-sub" id="network-note">Network API not supported</div>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-header">
-            <svg class="stat-icon"><use href="#icon-power"></use></svg>
-            <span>Visibility</span>
-          </div>
-          <div class="stat-sub" id="visibility-state">
-            Page visibility and focus state.
-          </div>
+          <div class="stat-header">Visibility</div>
+          <div class="stat-sub" id="visibility-state">--</div>
           <div class="pill-row">
             <div class="pill pill-strong" id="visibility-pill">ACTIVE</div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 
-  <!-- LOWER SHELL -->
+  <!-- LOWER BAR -->
   <div class="deck-shell">
     <div class="status-strip">
-      <div class="status-items">
-        <div class="status-item">
-          <div class="status-dot"></div>
-          <span class="status-label">FPS</span>
-          <span class="status-value" id="status-fps">--</span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">Battery</span>
-          <span class="status-value" id="status-battery">--%</span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">Network</span>
-          <span class="status-value" id="status-network">--</span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">Threads</span>
-          <span class="status-value" id="status-cores">--</span>
-        </div>
+      <div class="status-item">
+        <div class="status-dot"></div>
+        <span class="status-label">FPS</span>
+        <span class="status-value" id="status-fps">--</span>
       </div>
-      <div class="dial-wrapper">
-        <button class="dial-button" id="dial-button" aria-label="Toggle screen">
-          <span class="dial-label">Cycle Screens</span>
-        </button>
+      <div class="status-item">
+        <span class="status-label">Battery</span>
+        <span class="status-value" id="status-battery">--%</span>
       </div>
+      <div class="status-item">
+        <span class="status-label">Network</span>
+        <span class="status-value" id="status-network">--</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Threads</span>
+        <span class="status-value" id="status-cores">--</span>
+      </div>
+    </div>
+
+    <div class="dial-wrapper">
+      <button class="dial-button" id="dial-button"></button>
+      <div class="dial-label">Cycle Screens</div>
     </div>
   </div>
 </div>
 
 <script>
-  // Modes & knob
-  const modes = ["overview", "performance", "power"];
-  const modeLabels = {
+/* ---------- SCREEN CYCLING ---------- */
+const modes = ["overview", "performance", "power"];
+let modeIndex = 0;
+
+const panels = document.querySelectorAll(".screen-panel");
+const modeLabelEl = document.getElementById("mode-label");
+document.getElementById("dial-button").onclick = () => {
+  modeIndex = (modeIndex + 1) % modes.length;
+  updatePanels();
+};
+
+function updatePanels() {
+  const current = modes[modeIndex];
+  panels.forEach(p => p.classList.toggle("active", p.dataset.mode === current));
+  modeLabelEl.textContent = {
     overview: "System Overview",
     performance: "Render Performance",
     power: "Power & Network"
-  };
-  let modeIndex = 0;
-  const dialBtn = document.getElementById("dial-button");
-  const panels = document.querySelectorAll(".screen-panel");
-  const modeLabelEl = document.getElementById("mode-label");
+  }[current];
+}
+updatePanels();
 
-  function updatePanelVisibility() {
-    const currentMode = modes[modeIndex];
-    panels.forEach(p => {
-      p.classList.toggle("active", p.dataset.mode === currentMode);
-    });
-    modeLabelEl.textContent = modeLabels[currentMode];
-  }
+/* ---------- CLOCK ---------- */
+function updateClock() {
+  const now = new Date();
+  document.getElementById("header-clock").textContent =
+    now.toLocaleTimeString("en-US", {hour12:false});
+}
+setInterval(updateClock, 1000);
+updateClock();
 
-  dialBtn.addEventListener("click", () => {
-    modeIndex = (modeIndex + 1) % modes.length;
-    updatePanelVisibility();
+/* ---------- BASIC DEVICE INFO ---------- */
+document.getElementById("cpu-cores").textContent =
+  navigator.hardwareConcurrency || "--";
+
+document.getElementById("status-cores").textContent =
+  navigator.hardwareConcurrency || "--";
+
+if ("deviceMemory" in navigator) {
+  document.getElementById("device-memory").textContent = navigator.deviceMemory;
+} else {
+  document.getElementById("device-memory").textContent = "--";
+}
+
+/* ---------- USER AGENT INFO ---------- */
+const ua = navigator.userAgent;
+document.getElementById("ua-platform").textContent =
+  /Windows/i.test(ua) ? "Windows" :
+  /Mac OS/i.test(ua) ? "macOS" :
+  /Android/i.test(ua) ? "Android" :
+  /iPhone|iPad/i.test(ua) ? "iOS" : "Unknown";
+
+document.getElementById("ua-browser").textContent =
+  /Chrome/i.test(ua) ? "Chrome" :
+  /Safari/i.test(ua) && !/Chrome/i.test(ua) ? "Safari" :
+  /Firefox/i.test(ua) ? "Firefox" : "Unknown";
+
+/* ---------- UPTIME ---------- */
+const startTime = performance.now();
+setInterval(() => {
+  const t = (performance.now() - startTime) / 1000;
+  document.getElementById("uptime-seconds").textContent = t.toFixed(0);
+}, 1000);
+
+/* ---------- FPS & FRAME TIME ---------- */
+let last = performance.now();
+let frames = 0;
+setInterval(() => {
+  const now = performance.now();
+  const delta = now - last;
+  const fps = (frames * 1000) / delta;
+  frames = 0;
+  last = now;
+
+  document.getElementById("fps-value").textContent = fps.toFixed(0);
+  document.getElementById("status-fps").textContent = fps.toFixed(0);
+  document.getElementById("ms-per-frame").textContent =
+    fps > 0 ? (1000 / fps).toFixed(1) : "--";
+
+}, 1000);
+
+function frameLoop() { frames++; requestAnimationFrame(frameLoop); }
+requestAnimationFrame(frameLoop);
+
+/* ---------- BATTERY ---------- */
+if (navigator.getBattery) {
+  navigator.getBattery().then(b => {
+    function updateBattery() {
+      const pct = Math.round(b.level * 100);
+      document.getElementById("battery-level").textContent = pct;
+      document.getElementById("battery-status").textContent =
+        `${b.charging ? "Charging" : "On Battery"} ${pct}%`;
+      document.getElementById("status-battery").textContent = pct + "%";
+    }
+    updateBattery();
+    b.onlevelchange = updateBattery;
+    b.onchargingchange = updateBattery;
   });
+}
 
-  // Clock
-  const clockEl = document.getElementById("header-clock");
-  function updateClock() {
-    const now = new Date();
-    const pad = n => String(n).padStart(2, "0");
-    clockEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+/* ---------- NETWORK ---------- */
+const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+if (conn) {
+  function updateNet() {
+    const type = conn.effectiveType || "--";
+    document.getElementById("network-type").textContent = type.toUpperCase();
+    document.getElementById("status-network").textContent = type.toUpperCase();
+    document.getElementById("network-downlink").textContent =
+      conn.downlink ? conn.downlink + " Mbps" : "--";
   }
-  setInterval(updateClock, 1000);
-  updateClock();
+  updateNet();
+  conn.onchange = updateNet;
+}
 
-  // Device info
-  const coresEl = document.getElementById("cpu-cores");
-  const coresStatusEl = document.getElementById("status-cores");
-  if (navigator.hardwareConcurrency) {
-    coresEl.textContent = navigator.hardwareConcurrency;
-    coresStatusEl.textContent = navigator.hardwareConcurrency;
-  } else {
-    coresEl.textContent = "N/A";
-    coresStatusEl.textContent = "--";
-  }
+/* ---------- VISIBILITY ---------- */
+function updateVisibility() {
+  const active = document.visibilityState === "visible";
+  document.getElementById("visibility-state").textContent =
+    active ? "Dashboard is active" : "Dashboard is hidden";
+  document.getElementById("visibility-pill").textContent =
+    active ? "ACTIVE" : "HIDDEN";
+}
+document.addEventListener("visibilitychange", updateVisibility);
+updateVisibility();
 
-  const memEl = document.getElementById("device-memory");
-  const memNoteEl = document.getElementById("device-memory-note");
-  if ("deviceMemory" in navigator) {
-    memEl.textContent = navigator.deviceMemory;
-    memNoteEl.textContent = "Approximate; browser-reported.";
-  } else {
-    memEl.textContent = "N/A";
-    memNoteEl.textContent = "navigator.deviceMemory not supported.";
-  }
-
-  // User agent pills
-  const ua = navigator.userAgent || "";
-  const uaPlatformEl = document.getElementById("ua-platform");
-  const uaBrowserEl = document.getElementById("ua-browser");
-  let platform = /Windows/i.test(ua) ? "Windows"
-    : /Mac OS/i.test(ua) ? "macOS"
-    : /Android/i.test(ua) ? "Android"
-    : /iPhone|iPad/i.test(ua) ? "iOS"
-    : "Unknown Platform";
-  let browser = /Chrome\//i.test(ua) ? "Chrome"
-    : /Safari\//i.test(ua) && !/Chrome\//i.test(ua) ? "Safari"
-    : /Firefox\//i.test(ua) ? "Firefox"
-    : "Unknown Browser";
-  uaPlatformEl.textContent = platform;
-  uaBrowserEl.textContent = browser;
-
-  // Uptime
-  const uptimeEl = document.getElementById("uptime-seconds");
-  const startTime = performance.now();
-  setInterval(() => {
-    const seconds = (performance.now() - startTime) / 1000;
-    uptimeEl.textContent = seconds.toFixed(0);
-  }, 1000);
-
-  // FPS & frame time
-  let lastFrameTime = performance.now();
-  let frameCount = 0;
-  let fps = 0;
-  const fpsEl = document.getElementById("fps-value");
-  const frameMsEl = document.getElementById("ms-per-frame");
-  const statusFpsEl = document.getElementById("status-fps");
-
-  function fpsLoop(timestamp) {
-    frameCount++;
-    const delta = timestamp - lastFrameTime;
-    if (delta >= 1000) {
-      fps = (frameCount * 1000) / delta;
-      frameCount = 0;
-      lastFrameTime = timestamp;
-      const msPerFrame = fps > 0 ? (1000 / fps) : 0;
-      const fpsText = fps.toFixed(0);
-      fpsEl.textContent = fpsText;
-      statusFpsEl.textContent = fpsText;
-      frameMsEl.textContent = msPerFrame.toFixed(1);
-    }
-    requestAnimationFrame(fpsLoop);
-  }
-  requestAnimationFrame(fpsLoop);
-
-  // Performance timings
-  const perfTimingsEl = document.getElementById("perf-timings");
-  try {
-    const nav = performance.getEntriesByType("navigation")[0];
-    if (nav) {
-      const ttfb = nav.responseStart - nav.requestStart;
-      const domComplete = nav.domComplete - nav.startTime;
-      perfTimingsEl.textContent =
-        `TTFB: ${ttfb.toFixed(1)} ms · DOM complete: ${domComplete.toFixed(1)} ms`;
-    } else {
-      perfTimingsEl.textContent = "Navigation timing entry not available.";
-    }
-  } catch (e) {
-    perfTimingsEl.textContent = "Performance navigation metrics not supported.";
-  }
-
-  // Battery
-  const batteryLevelEl = document.getElementById("battery-level");
-  const batteryStatusEl = document.getElementById("battery-status");
-  const statusBatteryEl = document.getElementById("status-battery");
-
-  function updateBatteryUI(batt) {
-    const level = Math.round(batt.level * 100);
-    batteryLevelEl.textContent = level;
-    statusBatteryEl.textContent = level + "%";
-    batteryStatusEl.textContent = `${batt.charging ? "Charging" : "On Battery"} · ${level}%`;
-  }
-
-  if ("getBattery" in navigator) {
-    navigator.getBattery().then(batt => {
-      updateBatteryUI(batt);
-      batt.addEventListener("levelchange", () => updateBatteryUI(batt));
-      batt.addEventListener("chargingchange", () => updateBatteryUI(batt));
-    }).catch(() => {
-      batteryStatusEl.textContent = "Battery info not available.";
-    });
-  } else {
-    batteryStatusEl.textContent = "Battery API not supported.";
-  }
-
-  // Network
-  const netTypeEl = document.getElementById("network-type");
-  const netDownlinkEl = document.getElementById("network-downlink");
-  const netNoteEl = document.getElementById("network-note");
-  const statusNetworkEl = document.getElementById("status-network");
-
-  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  function updateNetworkUI(conn) {
-    const type = conn.effectiveType || "unknown";
-    netTypeEl.textContent = type.toUpperCase();
-    statusNetworkEl.textContent = type.toUpperCase();
-    const down = conn.downlink ? conn.downlink.toFixed(1) + " Mbps" : "Downlink N/A";
-    netDownlinkEl.textContent = down;
-    netNoteEl.textContent = `RTT ≈ ${conn.rtt || "?"} ms · Save data: ${conn.saveData ? "On" : "Off"}`;
-  }
-
-  if (connection) {
-    updateNetworkUI(connection);
-    connection.addEventListener("change", () => updateNetworkUI(connection));
-  } else {
-    netTypeEl.textContent = "N/A";
-    netDownlinkEl.textContent = "--";
-    netNoteEl.textContent = "Network Information API not supported.";
-    statusNetworkEl.textContent = "--";
-  }
-
-  // Visibility
-  const visibilityStateEl = document.getElementById("visibility-state");
-  const visibilityPillEl = document.getElementById("visibility-pill");
-  function updateVisibility() {
-    const visible = document.visibilityState === "visible";
-    visibilityStateEl.textContent = visible
-      ? "Dashboard tab is active and visible."
-      : "Dashboard tab is in background or hidden.";
-    visibilityPillEl.textContent = visible ? "ACTIVE" : "BACKGROUND";
-  }
-  document.addEventListener("visibilitychange", updateVisibility);
-  updateVisibility();
-
-  // Initial
-  updatePanelVisibility();
 </script>
 </body>
 </html>
