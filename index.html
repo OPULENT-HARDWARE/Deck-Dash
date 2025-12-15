@@ -11,9 +11,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <style>
-/* -------------------------------- */
-/* ROOT + GLOBALS */
-/* -------------------------------- */
 :root {
   --deck-bg: #050608;
   --shell-bg-top: #292c32;
@@ -34,21 +31,16 @@ html, body {
   color: #fff;
 }
 
-/* -------------------------------- */
 /* MAIN CONTAINER */
-/* -------------------------------- */
 .deck {
   width: 100%;
   height: 100%;
   background: var(--deck-bg);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
-/* -------------------------------- */
-/* TOP SCREEN AREA */
-/* -------------------------------- */
+/* TOP SCREEN */
 .deck-screen {
   flex: 3;
   padding: 20px;
@@ -91,9 +83,7 @@ html, body {
   font-feature-settings: "tnum";
 }
 
-/* -------------------------------- */
 /* PANELS */
-/* -------------------------------- */
 .screen-panels {
   flex: 1;
   position: relative;
@@ -117,9 +107,7 @@ html, body {
   transform: translateY(0);
 }
 
-/* -------------------------------- */
-/* STAT CARDS */
-/* -------------------------------- */
+/* CARDS */
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -179,9 +167,7 @@ html, body {
   background: rgba(255,255,255,0.2);
 }
 
-/* -------------------------------- */
 /* SCORES MODE */
-/* -------------------------------- */
 .scores-iframe {
   width: 100%;
   height: 100%;
@@ -190,9 +176,7 @@ html, body {
   background: #000;
 }
 
-/* -------------------------------- */
-/* LOWER SHELL — RESTORED CLEAN LOOK */
-/* -------------------------------- */
+/* LOWER SHELL */
 .deck-shell {
   flex: 1.1;
   background: linear-gradient(to bottom, var(--shell-bg-top), var(--shell-bg-bottom));
@@ -243,7 +227,7 @@ html, body {
   background: var(--accent-soft);
 }
 
-/* --- PERFECTLY INTEGRATED KNOB (inside bar) --- */
+/* KNOB – double-ring, centered highlight */
 .dial-wrapper {
   display: flex;
   flex-direction: column;
@@ -251,33 +235,54 @@ html, body {
 }
 
 .dial-button {
+  position: relative;
   width: 64px;
   height: 64px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  background: radial-gradient(circle at 30% 30%, #686a72, #1a1c22);
+
+  /* outer body */
+  background: radial-gradient(circle at 30% 30%, #6d7078, #1b1c22);
   box-shadow:
-    inset 0 0 8px rgba(0,0,0,0.65),
-    0 12px 22px rgba(0,0,0,0.8);
-  position: relative;
-  transition: transform .12s ease;
+    0 0 0 2px #000,
+    0 0 0 5px #262830,
+    0 14px 26px rgba(0,0,0,0.88);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* inner ring */
+.dial-button::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #4c4f58, #11131a);
+  box-shadow:
+    inset 0 0 6px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* center reflection (small, centered, no "eye") */
+.dial-button::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 30% 30%, #ffffff, #777777);
+  opacity: 0.35;
 }
 
 .dial-button:active {
   transform: translateY(1px);
-}
-
-.dial-button::after {
-  content: "";
-  position: absolute;
-  width: 22%;
-  height: 22%;
-  border-radius: 50%;
-  top: 28%;
-  left: 33%;
-  background: radial-gradient(circle at 30% 30%, #fff, #777);
-  opacity: 0.35;
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 0 5px #262830,
+    0 8px 18px rgba(0,0,0,0.9);
 }
 
 .dial-label {
@@ -287,16 +292,21 @@ html, body {
   text-transform: uppercase;
   color: var(--muted);
 }
+
+/* small screen tweak */
+@media (max-width: 640px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
 
 <body>
-
 <div class="deck">
 
-  <!-- ================= TOP SCREEN ================== -->
+  <!-- TOP SCREEN -->
   <div class="deck-screen">
-
     <div class="screen-header">
       <div class="screen-header-title">
         <div class="screen-header-dot"></div>
@@ -327,7 +337,7 @@ html, body {
         </div>
 
         <div class="stat-card">
-          <div class="stat-header">Uptime & Platform</div>
+          <div class="stat-header">Uptime &amp; Platform</div>
           <div class="stat-main">
             <div class="stat-value" id="uptime-seconds">0</div>
             <div class="stat-unit">sec</div>
@@ -363,14 +373,13 @@ html, body {
       <!-- MODE 3: POWER / NETWORK -->
       <div class="screen-panel" data-mode="power">
         <div class="grid-2">
-
           <div class="stat-card">
             <div class="stat-header">Battery</div>
             <div class="stat-main">
               <div class="stat-value" id="battery-level">--</div>
               <div class="stat-unit">%</div>
             </div>
-            <div class="stat-sub" id="battery-status">Battery API unsupported</div>
+            <div class="stat-sub" id="battery-status">Battery API unsupported.</div>
           </div>
 
           <div class="stat-card">
@@ -379,7 +388,7 @@ html, body {
               <div class="stat-value" id="network-type">--</div>
               <div class="stat-unit" id="network-downlink">--</div>
             </div>
-            <div class="stat-sub" id="network-note">Network API unsupported</div>
+            <div class="stat-sub" id="network-note">Network API unsupported.</div>
           </div>
         </div>
 
@@ -392,35 +401,31 @@ html, body {
         </div>
       </div>
 
-      <!-- MODE 4: SCORES (NBA widget) -->
+      <!-- MODE 4: SCORES -->
       <div class="screen-panel" data-mode="scores">
-        <iframe class="scores-iframe" src="scores-nba.html"></iframe>
+        <!-- cache-busting query to avoid stale "Loading..." version -->
+        <iframe class="scores-iframe" src="scores-nba.html?v=2" loading="lazy"></iframe>
       </div>
-
     </div>
   </div>
 
-  <!-- ================= LOWER HARDWARE STRIP ================== -->
+  <!-- LOWER SHELL -->
   <div class="deck-shell">
     <div class="status-strip">
-
       <div class="status-items">
         <div class="status-item">
           <div class="status-dot"></div>
           <span class="status-label">FPS</span>
           <span class="status-value" id="status-fps">--</span>
         </div>
-
         <div class="status-item">
           <span class="status-label">Battery</span>
           <span class="status-value" id="status-battery">--%</span>
         </div>
-
         <div class="status-item">
           <span class="status-label">Network</span>
           <span class="status-value" id="status-network">--</span>
         </div>
-
         <div class="status-item">
           <span class="status-label">Threads</span>
           <span class="status-value" id="status-cores">--</span>
@@ -431,17 +436,14 @@ html, body {
         <button class="dial-button" id="dial-button"></button>
         <div class="dial-label">CYCLE SCREENS</div>
       </div>
-
     </div>
   </div>
 
 </div>
 
 <script>
-/* ---------------------------------------------------- */
-/* SCREEN CYCLING */
-/* ---------------------------------------------------- */
-const modes = ["overview", "performance", "power", "scores"];
+/* MODES + KNOB */
+const modes = ["overview","performance","power","scores"];
 const modeNames = {
   overview: "System Overview",
   performance: "Performance",
@@ -455,144 +457,122 @@ const modeLabel = document.getElementById("mode-label");
 
 function updatePanels() {
   const mode = modes[modeIndex];
-  panels.forEach(p => p.classList.toggle("active", p.dataset.mode === mode));
+  panels.forEach(p =>
+    p.classList.toggle("active", p.dataset.mode === mode)
+  );
   modeLabel.textContent = modeNames[mode];
 }
 
-document.getElementById("dial-button").onclick = () => {
+document.getElementById("dial-button").addEventListener("click", () => {
   modeIndex = (modeIndex + 1) % modes.length;
   updatePanels();
-};
+});
+
 updatePanels();
 
-/* ---------------------------------------------------- */
 /* CLOCK */
-/* ---------------------------------------------------- */
 function updateClock() {
   const now = new Date();
   document.getElementById("header-clock").textContent =
-    now.toLocaleTimeString("en-US", {hour12:false});
+    now.toLocaleTimeString("en-US",{hour12:false});
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-/* ---------------------------------------------------- */
 /* CPU THREADS */
-/* ---------------------------------------------------- */
 const cores = navigator.hardwareConcurrency || "--";
 document.getElementById("cpu-cores").textContent = cores;
 document.getElementById("status-cores").textContent = cores;
 
-/* ---------------------------------------------------- */
-/* DEVICE MEMORY */
-/* ---------------------------------------------------- */
+/* MEMORY */
 if ("deviceMemory" in navigator) {
   document.getElementById("device-memory").textContent = navigator.deviceMemory;
 } else {
   document.getElementById("device-memory").textContent = "--";
 }
 
-/* ---------------------------------------------------- */
 /* UPTIME */
-/* ---------------------------------------------------- */
 const start = performance.now();
 setInterval(() => {
-  const secs = (performance.now() - start) / 1000;
-  document.getElementById("uptime-seconds").textContent = secs.toFixed(0);
+  const sec = (performance.now() - start) / 1000;
+  document.getElementById("uptime-seconds").textContent = sec.toFixed(0);
 }, 1000);
 
-/* ---------------------------------------------------- */
-/* FPS & FRAME TIME */
-/* ---------------------------------------------------- */
+/* FPS + FRAME TIME */
 let lastFrameTime = performance.now();
 let frameCount = 0;
-
-function tick() {
-  frameCount++;
-  requestAnimationFrame(tick);
-}
-tick();
+function loop() { frameCount++; requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
 
 setInterval(() => {
   const now = performance.now();
   const delta = now - lastFrameTime;
   const fps = frameCount * 1000 / delta;
-
   lastFrameTime = now;
   frameCount = 0;
 
-  document.getElementById("fps-value").textContent = fps.toFixed(0);
-  document.getElementById("status-fps").textContent = fps.toFixed(0);
-
+  const fpsText = fps.toFixed(0);
+  document.getElementById("fps-value").textContent = fpsText;
+  document.getElementById("status-fps").textContent = fpsText;
   document.getElementById("ms-per-frame").textContent =
     fps > 0 ? (1000/fps).toFixed(1) : "--";
-
 }, 1000);
 
-/* ---------------------------------------------------- */
 /* BATTERY */
-/* ---------------------------------------------------- */
 if (navigator.getBattery) {
   navigator.getBattery().then(b => {
-    const update = () => {
+    function upd() {
       const pct = Math.round(b.level * 100);
       document.getElementById("battery-level").textContent = pct;
       document.getElementById("status-battery").textContent = pct + "%";
       document.getElementById("battery-status").textContent =
         `${b.charging ? "Charging" : "On Battery"} · ${pct}%`;
-    };
-    update();
-    b.onchargingchange = b.onlevelchange = update;
+    }
+    upd();
+    b.addEventListener("levelchange", upd);
+    b.addEventListener("chargingchange", upd);
   });
 }
 
-/* ---------------------------------------------------- */
 /* NETWORK */
-/* ---------------------------------------------------- */
 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-
 if (conn) {
-  const update = () => {
-    const type = conn.effectiveType || "--";
-    document.getElementById("network-type").textContent = type.toUpperCase();
-    document.getElementById("status-network").textContent = type.toUpperCase();
+  function updNet() {
+    const t = conn.effectiveType || "--";
+    document.getElementById("network-type").textContent = t.toUpperCase();
+    document.getElementById("status-network").textContent = t.toUpperCase();
     document.getElementById("network-downlink").textContent =
-      conn.downlink ? conn.downlink.toFixed(1) + " Mbps" : "--";
-    document.getElementById("network-note").textContent = `RTT ≈ ${conn.rtt || "?"} ms`;
-  };
-  update();
-  conn.onchange = update;
+      conn.downlink ? conn.downlink.toFixed(1)+" Mbps" : "--";
+    document.getElementById("network-note").textContent =
+      `RTT ≈ ${conn.rtt || "?"} ms`;
+  }
+  updNet();
+  conn.addEventListener("change", updNet);
 }
 
-/* ---------------------------------------------------- */
 /* VISIBILITY */
-/* ---------------------------------------------------- */
-function updateVisibility() {
-  const v = document.visibilityState === "visible";
+function updVis() {
+  const vis = document.visibilityState === "visible";
   document.getElementById("visibility-state").textContent =
-    v ? "Dashboard active" : "Dashboard not visible";
+    vis ? "Dashboard active" : "Dashboard hidden";
   document.getElementById("visibility-pill").textContent =
-    v ? "ACTIVE" : "HIDDEN";
+    vis ? "ACTIVE" : "HIDDEN";
 }
-document.addEventListener("visibilitychange", updateVisibility);
-updateVisibility();
+document.addEventListener("visibilitychange", updVis);
+updVis();
 
-/* ---------------------------------------------------- */
-/* PLATFORM & BROWSER PILLS */
-/* ---------------------------------------------------- */
+/* UA PILLS */
 const ua = navigator.userAgent;
 document.getElementById("ua-platform").textContent =
   /Windows/i.test(ua) ? "Windows" :
-  /Mac/i.test(ua)     ? "macOS" :
-  /iPhone|iPad/i.test(ua) ? "iOS" :
-  /Android/i.test(ua) ? "Android" : "Unknown";
+  /Mac/i.test(ua) ? "macOS" :
+  /Android/i.test(ua) ? "Android" :
+  /iPhone|iPad/i.test(ua) ? "iOS" : "Unknown";
 
 document.getElementById("ua-browser").textContent =
   /Chrome/i.test(ua) ? "Chrome" :
-  /Safari/i.test(ua) && !/Chrome/i.test(ua) ? "Safari" :
-  /Firefox/i.test(ua) ? "Firefox" : "Unknown";
-
+  /Firefox/i.test(ua) ? "Firefox" :
+  /Safari/i.test(ua) && !/Chrome/i.test(ua) ? "Safari" : "Unknown";
 </script>
-
 </body>
 </html>
