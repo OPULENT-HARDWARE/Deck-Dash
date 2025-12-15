@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Deck News (RSS)</title>
+  <title>Deck News (Merged RSS)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -120,6 +120,7 @@
       gap: 10px;
       font-size: 11px;
       color: var(--muted);
+      margin-bottom: 4px;
     }
 
     .pill {
@@ -134,7 +135,6 @@
     .desc {
       font-size: 12px;
       color: rgba(255,255,255,0.8);
-      margin-top: 5px;
       line-height: 1.4;
     }
 
@@ -153,125 +153,170 @@
     <div class="header">
       <div class="header-left">
         <div class="dot"></div>
-        <div class="header-main" id="heading-label">Latest News</div>
+        <div class="header-main" id="heading-label">
+          Global Headlines
+        </div>
       </div>
-      <div class="header-meta" id="heading-meta">Loading…</div>
+      <div class="header-meta" id="heading-meta">
+        Loading…
+      </div>
     </div>
 
     <div id="news-list" class="news-list">
-      <div class="message">Loading headlines…</div>
+      <div class="message">Loading merged headlines…</div>
     </div>
   </div>
 
   <script>
     /**
-     * CONFIG
-     * ------------------------------------------------------------------
-     * Change RSS_URL to any RSS/Atom feed you like.
-     * Examples:
-     *   BBC World:  https://feeds.bbci.co.uk/news/world/rss.xml
-     *   BBC Top:    https://feeds.bbci.co.uk/news/rss.xml
-     *   Reuters:    https://feeds.reuters.com/reuters/topNews
+     * Merged RSS feeds (Option B)
+     * ------------------------------------------------------------
+     * Three proven-current sources:
+     *  - Reuters Top News
+     *  - BBC World
+     *  - AP Top News
+     * We hit them via rss2json (no key), merge, sort by date.
      */
-    const RSS_URL_DEFAULT = "https://feeds.bbci.co.uk/news/rss.xml";
+    const FEEDS = [
+      {
+        id: "reuters",
+        label: "Reuters",
+        rss: "https://feeds.reuters.com/reuters/topNews"
+      },
+      {
+        id: "bbc",
+        label: "BBC World",
+        rss: "https://feeds.bbci.co.uk/news/world/rss.xml"
+      },
+      {
+        id: "ap",
+        label: "AP News",
+        rss: "https://apnews.com/hub/apf-topnews?format=xml"
+      }
+    ];
 
-    // Allow overriding via ?rss=... in the iframe src
-    const params = new URLSearchParams(window.location.search);
-    const RSS_URL = params.get("rss") || RSS_URL_DEFAULT;
-
-    // We use rss2json public endpoint (no API key) to dodge CORS + XML parsing.
-    const API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" +
-      encodeURIComponent(RSS_URL);
+    // Public RSS -> JSON converter; no key required
+    const toApiUrl = (rssUrl) =>
+      "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(rssUrl);
 
     const headingLabel = document.getElementById("heading-label");
     const headingMeta  = document.getElementById("heading-meta");
     const newsList     = document.getElementById("news-list");
 
-    headingLabel.textContent = "Latest News (RSS)";
+    headingLabel.textContent = "Global Headlines • Merged";
 
     function formatTime(dateStr) {
       const d = new Date(dateStr);
       if (isNaN(d)) return "";
       const diffSec = (Date.now() - d.getTime()) / 1000;
 
-      if (diffSec < 60)   return "just now";
-      if (diffSec < 3600) return Math.floor(diffSec / 60) + " min ago";
-      if (diffSec < 86400) return Math.floor(diffSec / 3600) + " h ago";
-      if (diffSec < 86400 * 7) return Math.floor(diffSec / 86400) + " d ago";
+      if (diffSec < 60)           return "just now";
+      if (diffSec < 3600)         return Math.floor(diffSec / 60) + " min ago";
+      if (diffSec < 86400)        return Math.floor(diffSec / 3600) + " h ago";
+      if (diffSec < 86400 * 7)    return Math.floor(diffSec / 86400) + " d ago";
 
       return d.toLocaleDateString(undefined, {
-        year: "numeric", month: "short", day: "numeric"
+        year: "numeric",
+        month: "short",
+        day: "numeric"
       });
     }
 
-    async function loadNews() {
-      newsList.innerHTML = '<div class="message">Loading headlines…</div>';
+    async function loadFeeds() {
+      newsList.innerHTML = '<div class="message">Loading merged headlines…</div>';
       headingMeta.textContent = "Fetching…";
 
-      try {
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
+      const results = await Promise.allSettled(
+        FEEDS.map(feed =>
+          fetch(toApiUrl(feed.rss))
+            .then(res => {
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              return res.json();
+            })
+            .then(json => ({ feed, json }))
+        )
+      );
 
-        const items = data.items || [];
-        const feedTitle = data.feed && data.feed.title ? data.feed.title : "RSS Feed";
+      const allItems = [];
+      let successCount = 0;
 
-        headingLabel.textContent = feedTitle;
-        headingMeta.textContent = `Updated • ${items.length} stories`;
+      results.forEach(result => {
+        if (result.status === "fulfilled") {
+          successCount++;
+          const { feed, json } = result.value;
+          const items = json.items || [];
 
-        if (!items.length) {
-          newsList.innerHTML = '<div class="message">No items in feed.</div>';
-          return;
-        }
-
-        newsList.innerHTML = "";
-
-        // Show up to 25 latest items
-        items.slice(0, 25).forEach(item => {
-          const div = document.createElement("div");
-          div.className = "card";
-
-          const title = item.title || "Untitled";
-          const link  = item.link || "#";
-          const desc  = item.description || "";
-          const pub   = item.pubDate ? formatTime(item.pubDate) : "";
-          const author = item.author || data.feed?.author || "";
-
-          div.innerHTML = `
-            <div class="title">
-              <a href="${link}" target="_blank" rel="noopener noreferrer">
-                ${title}
-              </a>
-            </div>
-            <div class="meta-row">
-              ${author ? `<span>${author}</span>` : ""}
-              ${pub ? `<span>${pub}</span>` : ""}
-              <span class="pill">RSS</span>
-            </div>
-            ${desc ? `<div class="desc">${desc}</div>` : ""}
-          `;
-
-          div.addEventListener("click", () => {
-            if (link && link !== "#") {
-              window.open(link, "_blank", "noopener");
-            }
+          items.forEach(item => {
+            allItems.push({
+              sourceId: feed.id,
+              sourceLabel: feed.label,
+              title: item.title || "Untitled",
+              link: item.link || "#",
+              description: item.description || "",
+              pubDate: item.pubDate || item.isoDate || item.pubdate || "",
+            });
           });
+        } else {
+          console.warn("Feed failed:", result.reason);
+        }
+      });
 
-          newsList.appendChild(div);
-        });
-      } catch (err) {
-        console.error(err);
+      if (!allItems.length) {
         newsList.innerHTML = `
           <div class="message">
-            Failed to load RSS feed.<br>
-            Feed may be blocked, offline, or the proxy is down.
+            Failed to load all news feeds.<br>
+            RSS sources or proxy might be blocked.
           </div>
         `;
         headingMeta.textContent = "Error";
+        return;
       }
+
+      // Sort newest → oldest
+      allItems.sort((a, b) => {
+        const ta = new Date(a.pubDate).getTime() || 0;
+        const tb = new Date(b.pubDate).getTime() || 0;
+        return tb - ta;
+      });
+
+      headingMeta.textContent = `Updated • ${allItems.length} stories • ${successCount}/${FEEDS.length} feeds`;
+
+      newsList.innerHTML = "";
+
+      allItems.slice(0, 40).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        const timeLabel = item.pubDate ? formatTime(item.pubDate) : "";
+        const title = item.title;
+        const link  = item.link;
+        const desc  = item.description;
+
+        div.innerHTML = `
+          <div class="title">
+            <a href="${link}" target="_blank" rel="noopener noreferrer">
+              ${title}
+            </a>
+          </div>
+          <div class="meta-row">
+            <span>${item.sourceLabel}</span>
+            ${timeLabel ? `<span>${timeLabel}</span>` : ""}
+            <span class="pill">RSS</span>
+          </div>
+          ${desc ? `<div class="desc">${desc}</div>` : ""}
+        `;
+
+        div.addEventListener("click", () => {
+          if (link && link !== "#") {
+            window.open(link, "_blank", "noopener");
+          }
+        });
+
+        newsList.appendChild(div);
+      });
     }
 
-    document.addEventListener("DOMContentLoaded", loadNews);
+    document.addEventListener("DOMContentLoaded", loadFeeds);
   </script>
 </body>
 </html>
