@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deck Dash – Telemetry + Scores</title>
+<title>Deck Dash – Telemetry + Scores + Stocks</title>
 
 <!-- Google Font: Roboto -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -167,7 +167,7 @@ html, body {
   background: rgba(255,255,255,0.2);
 }
 
-/* SCORES MODE */
+/* IFRAMES (NBA + Stocks) */
 .scores-iframe {
   width: 100%;
   height: 100%;
@@ -176,7 +176,7 @@ html, body {
   background: #000;
 }
 
-/* LOWER SHELL – auto-sized, minimal gray */
+/* LOWER SHELL – auto-sized (minimal gray) */
 .deck-shell {
   flex: 0 0 auto;
   background: linear-gradient(to bottom, var(--shell-bg-top), var(--shell-bg-bottom));
@@ -299,7 +299,7 @@ html, body {
   color: var(--muted);
 }
 
-/* Small-screen tweak */
+/* Small-screen tweaks */
 @media (max-width: 640px) {
   .grid-2 {
     grid-template-columns: 1fr;
@@ -407,20 +407,18 @@ html, body {
         </div>
       </div>
 
-      <!-- MODE 4: SCORES -->
+      <!-- MODE 4: NBA SCORES -->
       <div class="screen-panel" data-mode="scores">
         <iframe class="scores-iframe" src="scores-nba.html?v=2" loading="lazy"></iframe>
+      </div>
+
+      <!-- MODE 5: STOCKS -->
+      <div class="screen-panel" data-mode="stocks">
+        <iframe class="scores-iframe" src="stocks.html" loading="lazy"></iframe>
       </div>
     </div>
   </div>
 
-     <!-- MODE 5: STOCKS -->
-      <div class="screen-panel" data-mode="stocks">
-    <iframe class="scores-iframe" src="stocks.html" loading="lazy"></iframe>
-  </div>
-</div>
-
-  
   <!-- LOWER SHELL -->
   <div class="deck-shell">
     <div class="status-strip">
@@ -455,12 +453,12 @@ html, body {
 
 <script>
 /* MODES + KNOB */
-const modes = ["overview","performance","power","scores"];
+const modes = ["overview","performance","power","scores","stocks"];
 const modeNames = {
   overview: "System Overview",
   performance: "Performance",
   power: "Power & Network",
-  scores: "Scores" ,
+  scores: "NBA Scores",
   stocks: "Stocks"
 };
 let modeIndex = 0;
