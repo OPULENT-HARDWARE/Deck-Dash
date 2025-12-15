@@ -1,275 +1,338 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Deck Dash – Browser Telemetry MVP</title>
+  <meta charset="UTF-8" />
+  <title>Deck Dash – Browser Telemetry MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- Google Font: Roboto -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- Google Font: Roboto -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-<style>
-  :root {
-    --deck-bg: #050608;
-    --shell-bg-top: #292c32;
-    --shell-bg-bottom: #121218;
-    --status-bg: #050608;
-    --accent-soft: #6fff86;
-    --muted: rgba(255, 255, 255, 0.6);
-  }
+  <style>
+    :root {
+      --deck-bg: #050608;
+      --shell-bg-top: #292c32;
+      --shell-bg-bottom: #121218;
+      --status-bg: #050608;
+      --accent-soft: #6fff86;
+      --muted: rgba(255, 255, 255, 0.6);
+    }
 
-  /* Make the page fill the iframe */
-  html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #000;
-    font-family: "Roboto", system-ui, -apple-system, sans-serif;
-    color: #fff;
-  }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: "Roboto", system-ui, -apple-system, sans-serif;
+      color: #fff;
+    }
 
-  /* Deck now fills the parent frame (iframe or window) */
-  .deck {
-    width: 100%;
-    height: 100%;
-    background: var(--deck-bg);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
+    .deck {
+      width: 100%;
+      height: 100%;
+      background: var(--deck-bg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
 
-  /* TOP SCREEN AREA */
-  .deck-screen {
-    flex: 3.5;
-    background: radial-gradient(circle at top, #262a34, #050608 60%);
-    padding: clamp(16px, 2.2vh, 24px);
-    display: flex;
-    flex-direction: column;
-    gap: clamp(10px, 1.4vh, 16px);
-  }
+    /* TOP SCREEN */
+    .deck-screen {
+      flex: 3;
+      background: radial-gradient(circle at top, #262a34, #050608 60%);
+      padding: clamp(16px, 2.2vh, 24px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(10px, 1.4vh, 16px);
+    }
 
-  .screen-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: clamp(0.6rem, 1vw, 0.75rem);
-    color: var(--muted);
-  }
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: clamp(0.6rem, 1vw, 0.75rem);
+      color: var(--muted);
+    }
 
-  .screen-header-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+    .screen-header-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-  .screen-header-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    box-shadow: 0 0 12px rgba(135, 255, 171, 0.7);
-  }
+    .screen-header-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      box-shadow: 0 0 12px rgba(135, 255, 171, 0.7);
+    }
 
-  .screen-header-mode {
-    font-weight: 500;
-  }
+    .screen-header-mode {
+      font-weight: 500;
+    }
 
-  .screen-header-time {
-    font-feature-settings: "tnum";
-  }
+    .screen-header-time {
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
 
-  /* MAIN PANEL AREA */
-  .screen-panels {
-    flex: 1;
-    position: relative;
-  }
+    .screen-panels {
+      flex: 1;
+      position: relative;
+    }
 
-  .screen-panel {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(5px);
-    transition: opacity 150ms ease, transform 150ms ease;
-    display: flex;
-    flex-direction: column;
-    gap: clamp(12px, 2vh, 18px);
-  }
+    .screen-panel {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(5px);
+      transition: opacity 150ms ease, transform 150ms ease;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(12px, 2vh, 18px);
+    }
 
-  .screen-panel.active {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-  }
+    .screen-panel.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
 
-  .grid-2 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: clamp(14px, 2vw, 24px);
-  }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: clamp(14px, 2vw, 24px);
+    }
 
-  .stat-card {
-    background: rgba(12, 14, 18, 0.9);
-    border-radius: 14px;
-    padding: clamp(12px, 1.5vh, 16px) clamp(14px, 1.5vw, 20px);
-    border: 1px solid rgba(255,255,255,0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+    .stat-card {
+      background: rgba(12, 14, 18, 0.9);
+      border-radius: 14px;
+      padding: clamp(12px, 1.5vh, 16px) clamp(14px, 1.5vw, 20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
-  .stat-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: clamp(0.55rem, 1vw, 0.75rem);
-    text-transform: uppercase;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-  }
+    .stat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(0.55rem, 1vw, 0.75rem);
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
 
-  .stat-icon {
-    width: 18px;
-    height: 18px;
-  }
+    .stat-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
 
-  .stat-main {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
+    .stat-main {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
 
-  .stat-value {
-    font-size: clamp(1.2rem, 2.8vw, 2rem);
-    font-weight: 500;
-    font-feature-settings: "tnum";
-  }
+    .stat-value {
+      font-size: clamp(1.2rem, 2.8vw, 2rem);
+      font-weight: 500;
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
 
-  .stat-unit {
-    font-size: clamp(0.6rem, 1.2vw, 0.9rem);
-    color: var(--muted);
-  }
+    .stat-unit {
+      font-size: clamp(0.6rem, 1.2vw, 0.9rem);
+      color: var(--muted);
+    }
 
-  .stat-sub {
-    font-size: clamp(0.55rem, 1vw, 0.75rem);
-    color: var(--muted);
-  }
+    .stat-sub {
+      font-size: clamp(0.55rem, 1vw, 0.75rem);
+      color: var(--muted);
+    }
 
-  .pill-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
 
-  .pill {
-    padding: 2px 8px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 10px;
-    font-size: clamp(0.5rem, 1vw, 0.7rem);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
+    .pill {
+      border-radius: 999px;
+      padding: 2px 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: clamp(0.5rem, 0.8vw, 0.7rem);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
 
-  .pill-strong {
-    background: rgba(255,255,255,0.12);
-  }
+    .pill-strong {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
 
-  /* LOWER HARDWARE SHELL */
-  .deck-shell {
-    flex: 1;
-    background: linear-gradient(to bottom, var(--shell-bg-top), var(--shell-bg-bottom));
-    padding: clamp(10px, 1.5vh, 18px) clamp(14px, 2vw, 28px);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+    /* SCORES IFRAME PANEL */
+    .scores-panel-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
 
-  .status-strip {
-    display: flex;
-    gap: clamp(14px, 2vw, 30px);
-    align-items: center;
-  }
+    .scores-iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      background: #000;
+    }
 
-  .status-item {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    font-size: clamp(0.55rem, 1vw, 0.75rem);
-    color: rgba(255,255,255,0.8);
-  }
+    /* LOWER HARDWARE SHELL – pill bar + knob */
+    .deck-shell {
+      flex: 1.1;
+      background: linear-gradient(to bottom, var(--shell-bg-top), var(--shell-bg-bottom));
+      padding: clamp(8px, 1.3vh, 14px) clamp(14px, 2vw, 24px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: clamp(6px, 0.9vh, 10px);
+    }
 
-  .status-label {
-    color: var(--muted);
-    text-transform: uppercase;
-    font-size: 0.68em;
-  }
+    .status-strip {
+      background: var(--status-bg);
+      border-radius: 999px;
+      padding: clamp(6px, 0.8vh, 8px) clamp(12px, 2vw, 18px);
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 1.5vw, 22px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
 
-  .status-value {
-    font-weight: 500;
-  }
+    .status-items {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px clamp(10px, 1.5vw, 16px);
+      font-size: clamp(0.55rem, 1vw, 0.75rem);
+      color: rgba(255, 255, 255, 0.82);
+    }
 
-  .status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent-soft);
-  }
+    .status-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
 
-  /* Knob */
-  .dial-wrapper {
-    position: relative;
-  }
+    .status-label {
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.75em;
+    }
 
-  .dial-button {
-    width: clamp(54px, 6vh, 70px);
-    aspect-ratio: 1/1;
-    border-radius: 50%;
-    border: none;
-    background: radial-gradient(circle at 30% 30%, #6f7078, #1b1c22);
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.7), 0 8px 16px rgba(0,0,0,0.6);
-    cursor: pointer;
-  }
+    .status-value {
+      font-weight: 500;
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
 
-  .dial-label {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-top: 6px;
-    font-size: clamp(0.5rem, 1vw, 0.75rem);
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-</style>
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+    }
+
+    .dial-wrapper {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .dial-button {
+      position: relative;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      width: min(64px, 12vh, 14vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #5a5f69, #12141a);
+      box-shadow:
+        0 0 0 2px #000,
+        0 0 0 5px #22242b,
+        0 14px 26px rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .dial-button::after {
+      content: "";
+      width: 18%;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #777777);
+      opacity: 0.35;
+    }
+
+    .dial-button:active {
+      transform: translateY(1px) scale(0.985);
+      box-shadow:
+        0 0 0 2px #000,
+        0 0 0 5px #22242b,
+        0 6px 16px rgba(0, 0, 0, 0.92);
+    }
+
+    .dial-label {
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(0.5rem, 0.85vw, 0.7rem);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ICONS -->
+<!-- Simple icon defs -->
 <svg width="0" height="0" style="position:absolute; visibility:hidden">
   <defs>
     <symbol id="icon-cpu" viewBox="0 0 24 24">
       <rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" fill="none"/>
       <rect x="10" y="10" width="4" height="4" fill="currentColor"/>
     </symbol>
-
     <symbol id="icon-ram" viewBox="0 0 24 24">
       <rect x="3" y="7" width="18" height="10" rx="2" stroke="currentColor" fill="none"/>
     </symbol>
-
     <symbol id="icon-fps" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="7" stroke="currentColor" fill="none"/>
     </symbol>
-
     <symbol id="icon-battery" viewBox="0 0 24 24">
       <rect x="5" y="8" width="13" height="9" rx="2" stroke="currentColor" fill="none"/>
     </symbol>
-
     <symbol id="icon-network" viewBox="0 0 24 24">
       <path d="M3 10a13 13 0 0 1 18 0" stroke="currentColor" fill="none"/>
     </symbol>
@@ -310,13 +373,12 @@
               <div class="stat-value" id="device-memory">--</div>
               <div class="stat-unit">GB</div>
             </div>
+            <div class="stat-sub" id="device-memory-note">navigator.deviceMemory</div>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-header">
-            Page Uptime & Platform
-          </div>
+          <div class="stat-header">Page Uptime & Platform</div>
           <div class="stat-main">
             <div class="stat-value" id="uptime-seconds">0</div>
             <div class="stat-unit">seconds</div>
@@ -332,7 +394,10 @@
       <div class="screen-panel" data-mode="performance">
         <div class="grid-2">
           <div class="stat-card">
-            <div class="stat-header"><svg class="stat-icon"><use href="#icon-fps"></use></svg>Frames Per Second</div>
+            <div class="stat-header">
+              <svg class="stat-icon"><use href="#icon-fps"></use></svg>
+              Frames Per Second
+            </div>
             <div class="stat-main">
               <div class="stat-value" id="fps-value">--</div>
               <div class="stat-unit">FPS</div>
@@ -340,7 +405,10 @@
           </div>
 
           <div class="stat-card">
-            <div class="stat-header"><svg class="stat-icon"><use href="#icon-fps"></use></svg>Frame Time</div>
+            <div class="stat-header">
+              <svg class="stat-icon"><use href="#icon-fps"></use></svg>
+              Frame Time
+            </div>
             <div class="stat-main">
               <div class="stat-value" id="ms-per-frame">--</div>
               <div class="stat-unit">ms</div>
@@ -351,24 +419,29 @@
 
       <!-- PANEL 3: POWER & NETWORK -->
       <div class="screen-panel" data-mode="power">
-
         <div class="grid-2">
           <div class="stat-card">
-            <div class="stat-header"><svg class="stat-icon"><use href="#icon-battery"></use></svg>Battery</div>
+            <div class="stat-header">
+              <svg class="stat-icon"><use href="#icon-battery"></use></svg>
+              Battery
+            </div>
             <div class="stat-main">
               <div class="stat-value" id="battery-level">--</div>
               <div class="stat-unit">%</div>
             </div>
-            <div class="stat-sub" id="battery-status">Battery API not supported</div>
+            <div class="stat-sub" id="battery-status">Battery API not supported.</div>
           </div>
 
           <div class="stat-card">
-            <div class="stat-header"><svg class="stat-icon"><use href="#icon-network"></use></svg>Network</div>
+            <div class="stat-header">
+              <svg class="stat-icon"><use href="#icon-network"></use></svg>
+              Network
+            </div>
             <div class="stat-main">
               <div class="stat-value" id="network-type">--</div>
               <div class="stat-unit" id="network-downlink">--</div>
             </div>
-            <div class="stat-sub" id="network-note">Network API not supported</div>
+            <div class="stat-sub" id="network-note">Network Information API not supported.</div>
           </div>
         </div>
 
@@ -379,166 +452,218 @@
             <div class="pill pill-strong" id="visibility-pill">ACTIVE</div>
           </div>
         </div>
+      </div>
 
+      <!-- PANEL 4: SCORES (NBA/NHL etc) -->
+      <div class="screen-panel" data-mode="scores">
+        <div class="scores-panel-inner">
+          <!--
+            Put your scores widget HTML in a separate file, e.g. scores-nhl.html
+            (the big NHL widget you pasted). Then set the src below:
+          -->
+          <iframe
+            class="scores-iframe"
+            src="scores-nhl.html"
+            loading="lazy">
+          </iframe>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- LOWER BAR -->
+  <!-- LOWER SHELL: pill strip + knob -->
   <div class="deck-shell">
     <div class="status-strip">
-      <div class="status-item">
-        <div class="status-dot"></div>
-        <span class="status-label">FPS</span>
-        <span class="status-value" id="status-fps">--</span>
+      <div class="status-items">
+        <div class="status-item">
+          <div class="status-dot"></div>
+          <span class="status-label">FPS</span>
+          <span class="status-value" id="status-fps">--</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Battery</span>
+          <span class="status-value" id="status-battery">--%</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Network</span>
+          <span class="status-value" id="status-network">--</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Threads</span>
+          <span class="status-value" id="status-cores">--</span>
+        </div>
       </div>
-      <div class="status-item">
-        <span class="status-label">Battery</span>
-        <span class="status-value" id="status-battery">--%</span>
+      <div class="dial-wrapper">
+        <button class="dial-button" id="dial-button">
+          <span class="dial-label">Cycle Screens</span>
+        </button>
       </div>
-      <div class="status-item">
-        <span class="status-label">Network</span>
-        <span class="status-value" id="status-network">--</span>
-      </div>
-      <div class="status-item">
-        <span class="status-label">Threads</span>
-        <span class="status-value" id="status-cores">--</span>
-      </div>
-    </div>
-
-    <div class="dial-wrapper">
-      <button class="dial-button" id="dial-button"></button>
-      <div class="dial-label">Cycle Screens</div>
     </div>
   </div>
 </div>
 
 <script>
-/* ---------- SCREEN CYCLING ---------- */
-const modes = ["overview", "performance", "power"];
-let modeIndex = 0;
-
-const panels = document.querySelectorAll(".screen-panel");
-const modeLabelEl = document.getElementById("mode-label");
-document.getElementById("dial-button").onclick = () => {
-  modeIndex = (modeIndex + 1) % modes.length;
-  updatePanels();
-};
-
-function updatePanels() {
-  const current = modes[modeIndex];
-  panels.forEach(p => p.classList.toggle("active", p.dataset.mode === current));
-  modeLabelEl.textContent = {
+  /* ---------- MODES & KNOB ---------- */
+  const modes = ["overview", "performance", "power", "scores"];
+  const modeNames = {
     overview: "System Overview",
     performance: "Render Performance",
-    power: "Power & Network"
-  }[current];
-}
-updatePanels();
+    power: "Power & Network",
+    scores: "Scores"
+  };
+  let modeIndex = 0;
 
-/* ---------- CLOCK ---------- */
-function updateClock() {
-  const now = new Date();
-  document.getElementById("header-clock").textContent =
-    now.toLocaleTimeString("en-US", {hour12:false});
-}
-setInterval(updateClock, 1000);
-updateClock();
+  const panels = document.querySelectorAll(".screen-panel");
+  const modeLabelEl = document.getElementById("mode-label");
 
-/* ---------- BASIC DEVICE INFO ---------- */
-document.getElementById("cpu-cores").textContent =
-  navigator.hardwareConcurrency || "--";
-
-document.getElementById("status-cores").textContent =
-  navigator.hardwareConcurrency || "--";
-
-if ("deviceMemory" in navigator) {
-  document.getElementById("device-memory").textContent = navigator.deviceMemory;
-} else {
-  document.getElementById("device-memory").textContent = "--";
-}
-
-/* ---------- USER AGENT INFO ---------- */
-const ua = navigator.userAgent;
-document.getElementById("ua-platform").textContent =
-  /Windows/i.test(ua) ? "Windows" :
-  /Mac OS/i.test(ua) ? "macOS" :
-  /Android/i.test(ua) ? "Android" :
-  /iPhone|iPad/i.test(ua) ? "iOS" : "Unknown";
-
-document.getElementById("ua-browser").textContent =
-  /Chrome/i.test(ua) ? "Chrome" :
-  /Safari/i.test(ua) && !/Chrome/i.test(ua) ? "Safari" :
-  /Firefox/i.test(ua) ? "Firefox" : "Unknown";
-
-/* ---------- UPTIME ---------- */
-const startTime = performance.now();
-setInterval(() => {
-  const t = (performance.now() - startTime) / 1000;
-  document.getElementById("uptime-seconds").textContent = t.toFixed(0);
-}, 1000);
-
-/* ---------- FPS & FRAME TIME ---------- */
-let last = performance.now();
-let frames = 0;
-setInterval(() => {
-  const now = performance.now();
-  const delta = now - last;
-  const fps = (frames * 1000) / delta;
-  frames = 0;
-  last = now;
-
-  document.getElementById("fps-value").textContent = fps.toFixed(0);
-  document.getElementById("status-fps").textContent = fps.toFixed(0);
-  document.getElementById("ms-per-frame").textContent =
-    fps > 0 ? (1000 / fps).toFixed(1) : "--";
-
-}, 1000);
-
-function frameLoop() { frames++; requestAnimationFrame(frameLoop); }
-requestAnimationFrame(frameLoop);
-
-/* ---------- BATTERY ---------- */
-if (navigator.getBattery) {
-  navigator.getBattery().then(b => {
-    function updateBattery() {
-      const pct = Math.round(b.level * 100);
-      document.getElementById("battery-level").textContent = pct;
-      document.getElementById("battery-status").textContent =
-        `${b.charging ? "Charging" : "On Battery"} ${pct}%`;
-      document.getElementById("status-battery").textContent = pct + "%";
-    }
-    updateBattery();
-    b.onlevelchange = updateBattery;
-    b.onchargingchange = updateBattery;
-  });
-}
-
-/* ---------- NETWORK ---------- */
-const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-if (conn) {
-  function updateNet() {
-    const type = conn.effectiveType || "--";
-    document.getElementById("network-type").textContent = type.toUpperCase();
-    document.getElementById("status-network").textContent = type.toUpperCase();
-    document.getElementById("network-downlink").textContent =
-      conn.downlink ? conn.downlink + " Mbps" : "--";
+  function updatePanels() {
+    const current = modes[modeIndex];
+    panels.forEach(p => p.classList.toggle("active", p.dataset.mode === current));
+    modeLabelEl.textContent = modeNames[current];
   }
-  updateNet();
-  conn.onchange = updateNet;
-}
 
-/* ---------- VISIBILITY ---------- */
-function updateVisibility() {
-  const active = document.visibilityState === "visible";
-  document.getElementById("visibility-state").textContent =
-    active ? "Dashboard is active" : "Dashboard is hidden";
-  document.getElementById("visibility-pill").textContent =
-    active ? "ACTIVE" : "HIDDEN";
-}
-document.addEventListener("visibilitychange", updateVisibility);
-updateVisibility();
+  document.getElementById("dial-button").addEventListener("click", () => {
+    modeIndex = (modeIndex + 1) % modes.length;
+    updatePanels();
+  });
 
+  updatePanels();
+
+  /* ---------- CLOCK ---------- */
+  function updateClock() {
+    const now = new Date();
+    document.getElementById("header-clock").textContent =
+      now.toLocaleTimeString("en-US", { hour12: false });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  /* ---------- DEVICE INFO ---------- */
+  const cores = navigator.hardwareConcurrency || "--";
+  document.getElementById("cpu-cores").textContent = cores;
+  document.getElementById("status-cores").textContent = cores;
+
+  const memEl = document.getElementById("device-memory");
+  const memNoteEl = document.getElementById("device-memory-note");
+  if ("deviceMemory" in navigator) {
+    memEl.textContent = navigator.deviceMemory;
+    memNoteEl.textContent = "Approximate; browser reported.";
+  } else {
+    memEl.textContent = "--";
+    memNoteEl.textContent = "navigator.deviceMemory not supported.";
+  }
+
+  /* ---------- UA PILLS ---------- */
+  const ua = navigator.userAgent || "";
+  const platform =
+    /Windows/i.test(ua) ? "Windows" :
+    /Mac OS/i.test(ua) ? "macOS" :
+    /Android/i.test(ua) ? "Android" :
+    /iPhone|iPad/i.test(ua) ? "iOS" :
+    "Unknown";
+  const browser =
+    /Chrome/i.test(ua) ? "Chrome" :
+    /Safari/i.test(ua) && !/Chrome/i.test(ua) ? "Safari" :
+    /Firefox/i.test(ua) ? "Firefox" :
+    "Unknown";
+
+  document.getElementById("ua-platform").textContent = platform;
+  document.getElementById("ua-browser").textContent = browser;
+
+  /* ---------- UPTIME ---------- */
+  const startTime = performance.now();
+  setInterval(() => {
+    const t = (performance.now() - startTime) / 1000;
+    document.getElementById("uptime-seconds").textContent = t.toFixed(0);
+  }, 1000);
+
+  /* ---------- FPS & FRAME TIME ---------- */
+  let last = performance.now();
+  let frames = 0;
+  setInterval(() => {
+    const now = performance.now();
+    const delta = now - last;
+    const fps = (frames * 1000) / delta;
+    frames = 0;
+    last = now;
+
+    const fpsText = fps.toFixed(0);
+    document.getElementById("fps-value").textContent = fpsText;
+    document.getElementById("status-fps").textContent = fpsText;
+    document.getElementById("ms-per-frame").textContent =
+      fps > 0 ? (1000 / fps).toFixed(1) : "--";
+  }, 1000);
+
+  function frameLoop() {
+    frames++;
+    requestAnimationFrame(frameLoop);
+  }
+  requestAnimationFrame(frameLoop);
+
+  /* ---------- BATTERY ---------- */
+  const batteryLevelEl = document.getElementById("battery-level");
+  const batteryStatusEl = document.getElementById("battery-status");
+  const statusBatteryEl = document.getElementById("status-battery");
+
+  if ("getBattery" in navigator) {
+    navigator.getBattery().then(batt => {
+      function updateBattery() {
+        const pct = Math.round(batt.level * 100);
+        batteryLevelEl.textContent = pct;
+        statusBatteryEl.textContent = pct + "%";
+        batteryStatusEl.textContent =
+          `${batt.charging ? "Charging" : "On Battery"} · ${pct}%`;
+      }
+      updateBattery();
+      batt.addEventListener("levelchange", updateBattery);
+      batt.addEventListener("chargingchange", updateBattery);
+    }).catch(() => {
+      batteryStatusEl.textContent = "Battery info not available.";
+    });
+  } else {
+    batteryStatusEl.textContent = "Battery API not supported.";
+  }
+
+  /* ---------- NETWORK ---------- */
+  const netTypeEl = document.getElementById("network-type");
+  const netDownlinkEl = document.getElementById("network-downlink");
+  const netNoteEl = document.getElementById("network-note");
+  const statusNetworkEl = document.getElementById("status-network");
+
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  function updateNetworkUI(conn) {
+    const type = conn.effectiveType || "unknown";
+    netTypeEl.textContent = type.toUpperCase();
+    statusNetworkEl.textContent = type.toUpperCase();
+    netDownlinkEl.textContent =
+      conn.downlink ? conn.downlink.toFixed(1) + " Mbps" : "--";
+    netNoteEl.textContent =
+      `RTT ≈ ${conn.rtt || "?"} ms · Save data: ${conn.saveData ? "On" : "Off"}`;
+  }
+
+  if (connection) {
+    updateNetworkUI(connection);
+    connection.addEventListener("change", () => updateNetworkUI(connection));
+  } else {
+    netTypeEl.textContent = "N/A";
+    netDownlinkEl.textContent = "--";
+    netNoteEl.textContent = "Network Information API not supported.";
+    statusNetworkEl.textContent = "--";
+  }
+
+  /* ---------- VISIBILITY ---------- */
+  const visibilityStateEl = document.getElementById("visibility-state");
+  const visibilityPillEl = document.getElementById("visibility-pill");
+
+  function updateVisibility() {
+    const visible = document.visibilityState === "visible";
+    visibilityStateEl.textContent = visible
+      ? "Dashboard tab is active and visible."
+      : "Dashboard tab is in background or hidden.";
+    visibilityPillEl.textContent = visible ? "ACTIVE" : "HIDDEN";
+  }
+  document.addEventListener("visibilitychange", updateVisibility);
+  updateVisibility();
 </script>
 </body>
 </html>
