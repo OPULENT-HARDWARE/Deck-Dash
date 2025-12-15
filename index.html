@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deck Dash – Telemetry + Scores + Stocks</title>
+<title>Deck Dash – Telemetry + Scores + Stocks + News</title>
 
 <!-- Google Font: Roboto -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: hidden; /* keep the dashboard as a single fixed screen */
   background: #000;
   font-family: "Roboto", sans-serif;
   color: #fff;
@@ -50,6 +50,7 @@ html, body {
   gap: 16px;
 }
 
+/* HEADER */
 .screen-header {
   display: flex;
   justify-content: space-between;
@@ -83,12 +84,14 @@ html, body {
   font-feature-settings: "tnum";
 }
 
-/* PANELS */
+/* PANELS WRAPPER */
 .screen-panels {
   flex: 1;
   position: relative;
+  min-height: 0; /* important for nested flex + scroll */
 }
 
+/* INDIVIDUAL PANELS */
 .screen-panel {
   position: absolute;
   inset: 0;
@@ -167,13 +170,20 @@ html, body {
   background: rgba(255,255,255,0.2);
 }
 
-/* IFRAMES (NBA + Stocks + Reddit) */
+/* IFRAMES (NBA + Stocks + News) */
 .scores-iframe {
   width: 100%;
   height: 100%;
   border: none;
   border-radius: 12px;
   background: #000;
+  display: block;
+}
+
+/* give iframe full height of panel in flex layout */
+.screen-panel > .scores-iframe {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* LOWER SHELL – auto-sized (minimal gray) */
@@ -409,17 +419,30 @@ html, body {
 
       <!-- MODE 4: NBA SCORES -->
       <div class="screen-panel" data-mode="scores">
-        <iframe class="scores-iframe" src="scores-nba.html?v=2" loading="lazy"></iframe>
+        <iframe
+          class="scores-iframe"
+          src="scores-nba.html?v=2"
+          loading="lazy"
+        ></iframe>
       </div>
 
       <!-- MODE 5: STOCKS -->
       <div class="screen-panel" data-mode="stocks">
-        <iframe class="scores-iframe" src="stocks.html" loading="lazy"></iframe>
+        <iframe
+          class="scores-iframe"
+          src="stocks.html"
+          loading="lazy"
+          scrolling="yes"
+        ></iframe>
       </div>
 
-      <!-- MODE 6: REDDIT -->
-      <div class="screen-panel" data-mode="Reddit">
-        <iframe class="scores-iframe" src="Reddit.html" loading="lazy"></iframe>
+      <!-- MODE 6: NEWS -->
+      <div class="screen-panel" data-mode="news">
+        <iframe
+          class="scores-iframe"
+          src="news.html"
+          loading="lazy"
+        ></iframe>
       </div>
     </div>
   </div>
@@ -458,14 +481,14 @@ html, body {
 
 <script>
 /* MODES + KNOB */
-const modes = ["overview","performance","power","scores","stocks","reddit"];
+const modes = ["overview", "performance", "power", "scores", "stocks", "news"];
 const modeNames = {
   overview: "System Overview",
   performance: "Performance",
   power: "Power & Network",
   scores: "NBA Scores",
   stocks: "Stocks",
-  reddit: "Reddit Frontpage"
+  news: "News"
 };
 let modeIndex = 0;
 
@@ -474,10 +497,10 @@ const modeLabel = document.getElementById("mode-label");
 
 function updatePanels() {
   const mode = modes[modeIndex];
-  panels.forEach(p =>
+  panels.forEach((p) =>
     p.classList.toggle("active", p.dataset.mode === mode)
   );
-  modeLabel.textContent = modeNames[mode];
+  modeLabel.textContent = modeNames[mode] || mode;
 }
 
 document.getElementById("dial-button").addEventListener("click", () => {
@@ -490,7 +513,7 @@ updatePanels();
 function updateClock() {
   const now = new Date();
   document.getElementById("header-clock").textContent =
-    now.toLocaleTimeString("en-US",{hour12:false});
+    now.toLocaleTimeString("en-US", { hour12: false });
 }
 setInterval(updateClock, 1000);
 updateClock();
@@ -502,7 +525,8 @@ document.getElementById("status-cores").textContent = cores;
 
 /* MEMORY */
 if ("deviceMemory" in navigator) {
-  document.getElementById("device-memory").textContent = navigator.deviceMemory;
+  document.getElementById("device-memory").textContent =
+    navigator.deviceMemory;
 } else {
   document.getElementById("device-memory").textContent = "--";
 }
@@ -517,13 +541,16 @@ setInterval(() => {
 /* FPS + FRAME TIME */
 let lastFrameTime = performance.now();
 let frameCount = 0;
-function loop() { frameCount++; requestAnimationFrame(loop); }
+function loop() {
+  frameCount++;
+  requestAnimationFrame(loop);
+}
 requestAnimationFrame(loop);
 
 setInterval(() => {
   const now = performance.now();
   const delta = now - lastFrameTime;
-  const fps = frameCount * 1000 / delta;
+  const fps = (frameCount * 1000) / delta;
   lastFrameTime = now;
   frameCount = 0;
 
@@ -531,18 +558,19 @@ setInterval(() => {
   document.getElementById("fps-value").textContent = fpsText;
   document.getElementById("status-fps").textContent = fpsText;
   document.getElementById("ms-per-frame").textContent =
-    fps > 0 ? (1000/fps).toFixed(1) : "--";
+    fps > 0 ? (1000 / fps).toFixed(1) : "--";
 }, 1000);
 
 /* BATTERY */
 if (navigator.getBattery) {
-  navigator.getBattery().then(b => {
+  navigator.getBattery().then((b) => {
     function upd() {
       const pct = Math.round(b.level * 100);
       document.getElementById("battery-level").textContent = pct;
       document.getElementById("status-battery").textContent = pct + "%";
-      document.getElementById("battery-status").textContent =
-        `${b.charging ? "Charging" : "On Battery"} · ${pct}%`;
+      document.getElementById("battery-status").textContent = `${
+        b.charging ? "Charging" : "On Battery"
+      } · ${pct}%`;
     }
     upd();
     b.addEventListener("levelchange", upd);
@@ -551,16 +579,21 @@ if (navigator.getBattery) {
 }
 
 /* NETWORK */
-const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+const conn =
+  navigator.connection ||
+  navigator.mozConnection ||
+  navigator.webkitConnection;
 if (conn) {
   function updNet() {
     const t = conn.effectiveType || "--";
     document.getElementById("network-type").textContent = t.toUpperCase();
     document.getElementById("status-network").textContent = t.toUpperCase();
-    document.getElementById("network-downlink").textContent =
-      conn.downlink ? conn.downlink.toFixed(1)+" Mbps" : "--";
-    document.getElementById("network-note").textContent =
-      `RTT ≈ ${conn.rtt || "?"} ms`;
+    document.getElementById("network-downlink").textContent = conn.downlink
+      ? conn.downlink.toFixed(1) + " Mbps"
+      : "--";
+    document.getElementById("network-note").textContent = `RTT ≈ ${
+      conn.rtt || "?"
+    } ms`;
   }
   updNet();
   conn.addEventListener("change", updNet);
@@ -569,10 +602,12 @@ if (conn) {
 /* VISIBILITY */
 function updVis() {
   const vis = document.visibilityState === "visible";
-  document.getElementById("visibility-state").textContent =
-    vis ? "Dashboard active" : "Dashboard hidden";
-  document.getElementById("visibility-pill").textContent =
-    vis ? "ACTIVE" : "HIDDEN";
+  document.getElementById("visibility-state").textContent = vis
+    ? "Dashboard active"
+    : "Dashboard hidden";
+  document.getElementById("visibility-pill").textContent = vis
+    ? "ACTIVE"
+    : "HIDDEN";
 }
 document.addEventListener("visibilitychange", updVis);
 updVis();
@@ -580,15 +615,24 @@ updVis();
 /* UA PILLS */
 const ua = navigator.userAgent;
 document.getElementById("ua-platform").textContent =
-  /Windows/i.test(ua) ? "Windows" :
-  /Mac/i.test(ua) ? "macOS" :
-  /Android/i.test(ua) ? "Android" :
-  /iPhone|iPad/i.test(ua) ? "iOS" : "Unknown";
+  /Windows/i.test(ua)
+    ? "Windows"
+    : /Mac/i.test(ua)
+    ? "macOS"
+    : /Android/i.test(ua)
+    ? "Android"
+    : /iPhone|iPad/i.test(ua)
+    ? "iOS"
+    : "Unknown";
 
 document.getElementById("ua-browser").textContent =
-  /Chrome/i.test(ua) ? "Chrome" :
-  /Firefox/i.test(ua) ? "Firefox" :
-  /Safari/i.test(ua) && !/Chrome/i.test(ua) ? "Safari" : "Unknown";
+  /Chrome/i.test(ua)
+    ? "Chrome"
+    : /Firefox/i.test(ua)
+    ? "Firefox"
+    : /Safari/i.test(ua) && !/Chrome/i.test(ua)
+    ? "Safari"
+    : "Unknown";
 </script>
 </body>
 </html>
