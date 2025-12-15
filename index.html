@@ -1,277 +1,638 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Deck News (RSS)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deck Dash – Telemetry + Scores + Stocks + News</title>
 
-  <style>
-    :root {
-      --bg: #050608;
-      --card-bg: rgba(255,255,255,0.04);
-      --card-bg-hover: rgba(255,255,255,0.07);
-      --muted: rgba(255,255,255,0.65);
-      --accent: #6fff86;
-    }
+<!-- Google Font: Roboto -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-      color: #fff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+<style>
+:root {
+  --deck-bg: #050608;
+  --shell-bg-top: #292c32;
+  --shell-bg-bottom: #121218;
+  --status-bg: #050608;
+  --accent-soft: #6fff86;
+  --muted: rgba(255,255,255,0.6);
+}
 
-    .shell {
-      box-sizing: border-box;
-      padding: 14px 18px;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* keep the dashboard as a single fixed screen */
+  background: #000;
+  font-family: "Roboto", sans-serif;
+  color: #fff;
+}
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: var(--muted);
-      opacity: 0.9;
-    }
+/* MAIN CONTAINER */
+.deck {
+  width: 100%;
+  height: 100%;
+  background: var(--deck-bg);
+  display: flex;
+  flex-direction: column;
+}
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+/* TOP SCREEN (fills remaining height) */
+.deck-screen {
+  flex: 1 1 auto;
+  padding: 20px;
+  background: radial-gradient(circle at top, #262a34, #050608 60%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 10px rgba(135,255,171,0.7);
-    }
+/* HEADER */
+.screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
 
-    .header-main {
-      font-size: 11px;
-      font-weight: 500;
-      color: #fff;
-    }
+.screen-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-    .header-meta {
-      font-size: 10px;
-      color: var(--muted);
-      text-align: right;
-    }
+.screen-header-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  box-shadow: 0 0 10px rgba(135,255,171,0.7);
+}
 
-    .news-list {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding-right: 4px;
-    }
+.screen-header-mode {
+  color: #fff;
+  font-weight: 500;
+}
 
-    .message {
-      font-size: 13px;
-      color: var(--muted);
-    }
+.screen-header-time {
+  font-feature-settings: "tnum";
+}
 
-    .card {
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: var(--card-bg);
-      transition: background 0.15s ease, transform 0.08s ease;
-      cursor: pointer;
-    }
+/* PANELS WRAPPER */
+.screen-panels {
+  flex: 1;
+  position: relative;
+  min-height: 0; /* important for nested flex + scroll */
+}
 
-    .card:hover {
-      background: var(--card-bg-hover);
-      transform: translateY(-1px);
-    }
+/* INDIVIDUAL PANELS */
+.screen-panel {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: opacity 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
-    .title {
-      font-size: 13px;
-      margin: 0 0 5px;
-      line-height: 1.3;
-    }
+.screen-panel.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
 
-    .title a {
-      color: #fff;
-      text-decoration: none;
-    }
+/* CARDS */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
 
-    .title a:hover {
-      text-decoration: underline;
-    }
+.stat-card {
+  background: rgba(12,14,18,0.9);
+  border-radius: 14px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-    .meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      font-size: 11px;
-      color: var(--muted);
-    }
+.stat-header {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
 
-    .pill {
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
+.stat-main {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
 
-    .desc {
-      font-size: 12px;
-      color: rgba(255,255,255,0.8);
-      margin-top: 5px;
-      line-height: 1.4;
-    }
+.stat-value {
+  font-size: 32px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
 
-    @media (max-width: 480px) {
-      .shell {
-        padding: 10px 10px 8px;
-      }
-      .desc {
-        display: none; /* tighter on tiny spaces */
-      }
-    }
-  </style>
+.stat-unit {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 999px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.pill-strong {
+  background: rgba(255,255,255,0.2);
+}
+
+/* IFRAMES (NBA + Stocks + News) */
+.scores-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 12px;
+  background: #000;
+  display: block;
+}
+
+/* give iframe full height of panel in flex layout */
+.screen-panel > .scores-iframe {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* LOWER SHELL – auto-sized (minimal gray) */
+.deck-shell {
+  flex: 0 0 auto;
+  background: linear-gradient(to bottom, var(--shell-bg-top), var(--shell-bg-bottom));
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+}
+
+.status-strip {
+  flex: 1;
+  background: var(--status-bg);
+  border-radius: 999px;
+  padding: 10px 22px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+}
+
+.status-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.status-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.status-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+}
+
+/* HI-FI KNOB – double rings, centered highlight */
+.dial-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Outer knob body */
+.dial-button {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+
+  background:
+    radial-gradient(circle at 30% 20%, #a7adb9, #3a3d45 45%, #111318 80%, #050508 100%);
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 0 5px #262830,
+    0 18px 28px rgba(0,0,0,0.9);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* Inner recessed disc */
+.dial-button::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, #747884, #23252d 55%, #0b0c10 95%);
+  box-shadow:
+    inset 0 0 6px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(255,255,255,0.08);
+}
+
+/* Center cap / reflection */
+.dial-button::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(circle at 30% 25%, #f4f4f7, #a7abb3 45%, #555862 80%);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 4px 6px rgba(0,0,0,0.6);
+  opacity: 0.9;
+}
+
+.dial-button:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 0 5px #262830,
+    0 10px 18px rgba(0,0,0,0.9);
+}
+
+.dial-label {
+  margin-top: 6px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Small-screen tweaks */
+@media (max-width: 640px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="shell">
-    <div class="header">
-      <div class="header-left">
-        <div class="dot"></div>
-        <div class="header-main" id="heading-label">Latest News</div>
+<div class="deck">
+
+  <!-- TOP SCREEN -->
+  <div class="deck-screen">
+    <div class="screen-header">
+      <div class="screen-header-title">
+        <div class="screen-header-dot"></div>
+        <div class="screen-header-mode" id="mode-label">System Overview</div>
       </div>
-      <div class="header-meta" id="heading-meta">Loading…</div>
+      <div class="screen-header-time" id="header-clock">--:--:--</div>
     </div>
 
-    <div id="news-list" class="news-list">
-      <div class="message">Loading headlines…</div>
+    <div class="screen-panels">
+      <!-- MODE 1: OVERVIEW -->
+      <div class="screen-panel active" data-mode="overview">
+        <div class="grid-2">
+          <div class="stat-card">
+            <div class="stat-header">CPU Threads</div>
+            <div class="stat-main">
+              <div class="stat-value" id="cpu-cores">--</div>
+              <div class="stat-unit">logical</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">Device Memory</div>
+            <div class="stat-main">
+              <div class="stat-value" id="device-memory">--</div>
+              <div class="stat-unit">GB</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">Uptime &amp; Platform</div>
+          <div class="stat-main">
+            <div class="stat-value" id="uptime-seconds">0</div>
+            <div class="stat-unit">sec</div>
+          </div>
+          <div class="pill-row">
+            <div class="pill pill-strong" id="ua-platform"></div>
+            <div class="pill" id="ua-browser"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODE 2: PERFORMANCE -->
+      <div class="screen-panel" data-mode="performance">
+        <div class="grid-2">
+          <div class="stat-card">
+            <div class="stat-header">Frames Per Second</div>
+            <div class="stat-main">
+              <div class="stat-value" id="fps-value">--</div>
+              <div class="stat-unit">fps</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">Frame Time</div>
+            <div class="stat-main">
+              <div class="stat-value" id="ms-per-frame">--</div>
+              <div class="stat-unit">ms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODE 3: POWER / NETWORK -->
+      <div class="screen-panel" data-mode="power">
+        <div class="grid-2">
+          <div class="stat-card">
+            <div class="stat-header">Battery</div>
+            <div class="stat-main">
+              <div class="stat-value" id="battery-level">--</div>
+              <div class="stat-unit">%</div>
+            </div>
+            <div class="stat-sub" id="battery-status">Battery API unsupported.</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">Network</div>
+            <div class="stat-main">
+              <div class="stat-value" id="network-type">--</div>
+              <div class="stat-unit" id="network-downlink">--</div>
+            </div>
+            <div class="stat-sub" id="network-note">Network API unsupported.</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">Visibility</div>
+          <div class="stat-sub" id="visibility-state">--</div>
+          <div class="pill-row">
+            <div class="pill pill-strong" id="visibility-pill">ACTIVE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODE 4: NBA SCORES -->
+      <div class="screen-panel" data-mode="scores">
+        <iframe
+          class="scores-iframe"
+          src="scores-nba.html?v=2"
+          loading="lazy"
+        ></iframe>
+      </div>
+
+      <!-- MODE 5: STOCKS -->
+      <div class="screen-panel" data-mode="stocks">
+        <iframe
+          class="scores-iframe"
+          src="stocks.html"
+          loading="lazy"
+          scrolling="yes"
+        ></iframe>
+      </div>
+
+      <!-- MODE 6: NEWS -->
+      <div class="screen-panel" data-mode="news">
+        <iframe
+          class="scores-iframe"
+          src="news.html"
+          loading="lazy"
+        ></iframe>
+      </div>
     </div>
   </div>
 
-  <script>
-    /**
-     * CONFIG
-     * ------------------------------------------------------------------
-     * Change RSS_URL to any RSS/Atom feed you like.
-     * Examples:
-     *   BBC World:  https://feeds.bbci.co.uk/news/world/rss.xml
-     *   BBC Top:    https://feeds.bbci.co.uk/news/rss.xml
-     *   Reuters:    https://feeds.reuters.com/reuters/topNews
-     */
-    const RSS_URL_DEFAULT = "https://feeds.bbci.co.uk/news/rss.xml";
+  <!-- LOWER SHELL -->
+  <div class="deck-shell">
+    <div class="status-strip">
+      <div class="status-items">
+        <div class="status-item">
+          <div class="status-dot"></div>
+          <span class="status-label">FPS</span>
+          <span class="status-value" id="status-fps">--</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Battery</span>
+          <span class="status-value" id="status-battery">--%</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Network</span>
+          <span class="status-value" id="status-network">--</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Threads</span>
+          <span class="status-value" id="status-cores">--</span>
+        </div>
+      </div>
 
-    // Allow overriding via ?rss=... in the iframe src
-    const params = new URLSearchParams(window.location.search);
-    const RSS_URL = params.get("rss") || RSS_URL_DEFAULT;
+      <div class="dial-wrapper">
+        <button class="dial-button" id="dial-button"></button>
+        <div class="dial-label">CYCLE SCREENS</div>
+      </div>
+    </div>
+  </div>
 
-    // We use rss2json public endpoint (no API key) to dodge CORS + XML parsing.
-    const API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" +
-      encodeURIComponent(RSS_URL);
+</div>
 
-    const headingLabel = document.getElementById("heading-label");
-    const headingMeta  = document.getElementById("heading-meta");
-    const newsList     = document.getElementById("news-list");
+<script>
+/* MODES + KNOB */
+const modes = ["overview", "performance", "power", "scores", "stocks", "news"];
+const modeNames = {
+  overview: "System Overview",
+  performance: "Performance",
+  power: "Power & Network",
+  scores: "NBA Scores",
+  stocks: "Stocks",
+  news: "News"
+};
+let modeIndex = 0;
 
-    headingLabel.textContent = "Latest News (RSS)";
+const panels = document.querySelectorAll(".screen-panel");
+const modeLabel = document.getElementById("mode-label");
 
-    function formatTime(dateStr) {
-      const d = new Date(dateStr);
-      if (isNaN(d)) return "";
-      const diffSec = (Date.now() - d.getTime()) / 1000;
+function updatePanels() {
+  const mode = modes[modeIndex];
+  panels.forEach((p) =>
+    p.classList.toggle("active", p.dataset.mode === mode)
+  );
+  modeLabel.textContent = modeNames[mode] || mode;
+}
 
-      if (diffSec < 60)   return "just now";
-      if (diffSec < 3600) return Math.floor(diffSec / 60) + " min ago";
-      if (diffSec < 86400) return Math.floor(diffSec / 3600) + " h ago";
-      if (diffSec < 86400 * 7) return Math.floor(diffSec / 86400) + " d ago";
+document.getElementById("dial-button").addEventListener("click", () => {
+  modeIndex = (modeIndex + 1) % modes.length;
+  updatePanels();
+});
+updatePanels();
 
-      return d.toLocaleDateString(undefined, {
-        year: "numeric", month: "short", day: "numeric"
-      });
+/* CLOCK */
+function updateClock() {
+  const now = new Date();
+  document.getElementById("header-clock").textContent =
+    now.toLocaleTimeString("en-US", { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* CPU THREADS */
+const cores = navigator.hardwareConcurrency || "--";
+document.getElementById("cpu-cores").textContent = cores;
+document.getElementById("status-cores").textContent = cores;
+
+/* MEMORY */
+if ("deviceMemory" in navigator) {
+  document.getElementById("device-memory").textContent =
+    navigator.deviceMemory;
+} else {
+  document.getElementById("device-memory").textContent = "--";
+}
+
+/* UPTIME */
+const start = performance.now();
+setInterval(() => {
+  const sec = (performance.now() - start) / 1000;
+  document.getElementById("uptime-seconds").textContent = sec.toFixed(0);
+}, 1000);
+
+/* FPS + FRAME TIME */
+let lastFrameTime = performance.now();
+let frameCount = 0;
+function loop() {
+  frameCount++;
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+setInterval(() => {
+  const now = performance.now();
+  const delta = now - lastFrameTime;
+  const fps = (frameCount * 1000) / delta;
+  lastFrameTime = now;
+  frameCount = 0;
+
+  const fpsText = fps.toFixed(0);
+  document.getElementById("fps-value").textContent = fpsText;
+  document.getElementById("status-fps").textContent = fpsText;
+  document.getElementById("ms-per-frame").textContent =
+    fps > 0 ? (1000 / fps).toFixed(1) : "--";
+}, 1000);
+
+/* BATTERY */
+if (navigator.getBattery) {
+  navigator.getBattery().then((b) => {
+    function upd() {
+      const pct = Math.round(b.level * 100);
+      document.getElementById("battery-level").textContent = pct;
+      document.getElementById("status-battery").textContent = pct + "%";
+      document.getElementById("battery-status").textContent = `${
+        b.charging ? "Charging" : "On Battery"
+      } · ${pct}%`;
     }
+    upd();
+    b.addEventListener("levelchange", upd);
+    b.addEventListener("chargingchange", upd);
+  });
+}
 
-    async function loadNews() {
-      newsList.innerHTML = '<div class="message">Loading headlines…</div>';
-      headingMeta.textContent = "Fetching…";
+/* NETWORK */
+const conn =
+  navigator.connection ||
+  navigator.mozConnection ||
+  navigator.webkitConnection;
+if (conn) {
+  function updNet() {
+    const t = conn.effectiveType || "--";
+    document.getElementById("network-type").textContent = t.toUpperCase();
+    document.getElementById("status-network").textContent = t.toUpperCase();
+    document.getElementById("network-downlink").textContent = conn.downlink
+      ? conn.downlink.toFixed(1) + " Mbps"
+      : "--";
+    document.getElementById("network-note").textContent = `RTT ≈ ${
+      conn.rtt || "?"
+    } ms`;
+  }
+  updNet();
+  conn.addEventListener("change", updNet);
+}
 
-      try {
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
+/* VISIBILITY */
+function updVis() {
+  const vis = document.visibilityState === "visible";
+  document.getElementById("visibility-state").textContent = vis
+    ? "Dashboard active"
+    : "Dashboard hidden";
+  document.getElementById("visibility-pill").textContent = vis
+    ? "ACTIVE"
+    : "HIDDEN";
+}
+document.addEventListener("visibilitychange", updVis);
+updVis();
 
-        const items = data.items || [];
-        const feedTitle = data.feed && data.feed.title ? data.feed.title : "RSS Feed";
+/* UA PILLS */
+const ua = navigator.userAgent;
+document.getElementById("ua-platform").textContent =
+  /Windows/i.test(ua)
+    ? "Windows"
+    : /Mac/i.test(ua)
+    ? "macOS"
+    : /Android/i.test(ua)
+    ? "Android"
+    : /iPhone|iPad/i.test(ua)
+    ? "iOS"
+    : "Unknown";
 
-        headingLabel.textContent = feedTitle;
-        headingMeta.textContent = `Updated • ${items.length} stories`;
-
-        if (!items.length) {
-          newsList.innerHTML = '<div class="message">No items in feed.</div>';
-          return;
-        }
-
-        newsList.innerHTML = "";
-
-        // Show up to 25 latest items
-        items.slice(0, 25).forEach(item => {
-          const div = document.createElement("div");
-          div.className = "card";
-
-          const title = item.title || "Untitled";
-          const link  = item.link || "#";
-          const desc  = item.description || "";
-          const pub   = item.pubDate ? formatTime(item.pubDate) : "";
-          const author = item.author || data.feed?.author || "";
-
-          div.innerHTML = `
-            <div class="title">
-              <a href="${link}" target="_blank" rel="noopener noreferrer">
-                ${title}
-              </a>
-            </div>
-            <div class="meta-row">
-              ${author ? `<span>${author}</span>` : ""}
-              ${pub ? `<span>${pub}</span>` : ""}
-              <span class="pill">RSS</span>
-            </div>
-            ${desc ? `<div class="desc">${desc}</div>` : ""}
-          `;
-
-          div.addEventListener("click", () => {
-            if (link && link !== "#") {
-              window.open(link, "_blank", "noopener");
-            }
-          });
-
-          newsList.appendChild(div);
-        });
-      } catch (err) {
-        console.error(err);
-        newsList.innerHTML = `
-          <div class="message">
-            Failed to load RSS feed.<br>
-            Feed may be blocked, offline, or the proxy is down.
-          </div>
-        `;
-        headingMeta.textContent = "Error";
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", loadNews);
-  </script>
+document.getElementById("ua-browser").textContent =
+  /Chrome/i.test(ua)
+    ? "Chrome"
+    : /Firefox/i.test(ua)
+    ? "Firefox"
+    : /Safari/i.test(ua) && !/Chrome/i.test(ua)
+    ? "Safari"
+    : "Unknown";
+</script>
 </body>
 </html>
