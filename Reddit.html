@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stocks – Deck Widget</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  :root {
+    --bg: #1e1e1e;
+    --card-bg: #2a2a2a;
+    --accent-pos: #00d2be;
+    --accent-neg: #ff4e4e;
+    --text-main: #ffffff;
+    --text-sub: #b0b0b0;
+    --border-soft: #3b3b3b;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font);
+    overflow-y: auto;
+  }
+
+  .wrap {
+    padding: 16px;
+  }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .title-block h2 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+
+  .live-indicator {
+    font-size: 11px;
+    color: var(--accent-pos);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-pos);
+    animation: pulse 1.8s infinite;
+  }
+
+  #stock-board {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .stock-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid transparent;
+  }
+
+  .stock-card.favorite {
+    border-color: var(--accent-pos);
+    background: radial-gradient(circle at top left, #333842, #25272d);
+  }
+
+  .stock-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stock-symbol {
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    font-size: 16px;
+    text-transform: uppercase;
+  }
+
+  .stock-name {
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+
+  .stock-right {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stock-price {
+    font-size: 18px;
+  }
+
+  .stock-change {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .stock-change.pos { color: var(--accent-pos); }
+  .stock-change.neg { color: var(--accent-neg); }
+  .stock-change.flat { color: var(--text-sub); }
+
+  .message {
+    padding: 24px 8px;
+    text-align: center;
+    color: var(--text-sub);
+    font-size: 13px;
+  }
+
+  .footer-note {
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--text-sub);
+    text-align: right;
+    opacity: 0.7;
+  }
+
+  @keyframes pulse {
+    0%   { opacity: 1;   transform: scale(1); }
+    50%  { opacity: 0.4; transform: scale(0.8); }
+    100% { opacity: 1;   transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header-row">
+    <div class="title-block">
+      <h2>Watchlist</h2>
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        GOOGLEFINANCE FEED
+      </div>
+    </div>
+  </div>
+
+  <div id="stock-board">
+    <div class="message">Loading stock data…</div>
+  </div>
+
+  <div class="footer-note">
+    Data via GOOGLEFINANCE (delayed / not for trading)
+  </div>
+</div>
+
+<script>
+  // ✅ Your published Google Sheet CSV URL
+  const GOOGLE_SHEET_CSV_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTYd9z5VljCdvzMEnAyIREh19tCayno6JbPQ31eR1pkAIOjcNTJGEpo6WBG3LCo624ZTPmN_N29qbqB/pub?output=csv";
+
+  // OPTIONAL: mark one symbol with special styling
+  const FAVORITE_SYMBOL = "CRSR";
+
+  async function loadStocks() {
+    const board = document.getElementById("stock-board");
+    board.innerHTML = '<div class="message">Loading stock data…</div>';
+
+    try {
+      const res = await fetch(GOOGLE_SHEET_CSV_URL);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const text = await res.text();
+
+      const rows = text.trim().split(/\r?\n/).map(r => r.split(","));
+      if (rows.length < 2) {
+        board.innerHTML = '<div class="message">No stock rows found in sheet.</div>';
+        return;
+      }
+
+      const header = rows[0].map(h => h.trim());
+      const dataRows = rows.slice(1);
+
+      const idxSymbol = header.indexOf("Symbol");
+      const idxName   = header.indexOf("Name");
+      const idxPrice  = header.indexOf("Price");
+      const idxChange = header.indexOf("ChangePct");
+
+      if (idxSymbol === -1 || idxPrice === -1 || idxChange === -1) {
+        board.innerHTML =
+          '<div class="message">Sheet must have headers: Symbol, Name, Price, ChangePct.</div>';
+        return;
+      }
+
+      board.innerHTML = "";
+
+      dataRows.forEach(row => {
+        if (!row[idxSymbol]) return;
+
+        const symbol = (row[idxSymbol] || "").trim();
+        const name   = (row[idxName]   || "").trim();
+        const price  = parseFloat(row[idxPrice]);
+        const change = parseFloat(row[idxChange]);
+
+        const card = document.createElement("div");
+        const isFav = FAVORITE_SYMBOL &&
+          symbol.toUpperCase() === FAVORITE_SYMBOL.toUpperCase();
+
+        card.className = "stock-card" + (isFav ? " favorite" : "");
+
+        let changeClass = "flat";
+        if (!isNaN(change)) {
+          if (change > 0) changeClass = "pos";
+          else if (change < 0) changeClass = "neg";
+        }
+
+        const priceText  = !isNaN(price)  ? price.toFixed(2) : "--";
+        const changeText = !isNaN(change)
+          ? (change > 0 ? "+" : "") + change.toFixed(2) + "%"
+          : "--";
+
+        card.innerHTML = `
+          <div class="stock-left">
+            <div class="stock-symbol">${symbol}</div>
+            <div class="stock-name">${name || "&nbsp;"}</div>
+          </div>
+          <div class="stock-right">
+            <div class="stock-price">${priceText}</div>
+            <div class="stock-change ${changeClass}">${changeText}</div>
+          </div>
+        `;
+
+        board.appendChild(card);
+      });
+
+      if (!board.children.length) {
+        board.innerHTML = '<div class="message">No usable rows in sheet.</div>';
+      }
+    } catch (err) {
+      console.error("Stock widget error:", err);
+      board.innerHTML =
+        '<div class="message">Error loading stock data. Check console / sheet URL.</div>';
+    }
+  }
+
+  loadStocks();
+  // Optional: refresh every 5 minutes
+  setInterval(loadStocks, 5 * 60 * 1000);
+</script>
+</body>
+</html>
