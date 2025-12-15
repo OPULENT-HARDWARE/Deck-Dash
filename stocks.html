@@ -1,0 +1,91 @@
+<!-- stocks.html (very simplified) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stocks – Widget</title>
+<style>
+  body {
+    margin: 0;
+    background: #1e1e1e;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #stock-board {
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .stock-card {
+    background: #2a2a2a;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .stock-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stock-symbol {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 18px;
+  }
+  .stock-name {
+    font-size: 12px;
+    color: #b0b0b0;
+  }
+  .stock-right {
+    text-align: right;
+  }
+  .stock-price {
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stock-change {
+    font-size: 12px;
+  }
+  .stock-change.pos { color: #00d2be; }
+  .stock-change.neg { color: #ff4e4e; }
+</style>
+</head>
+<body>
+
+<div id="stock-board"></div>
+
+<script>
+  // For now: static example data
+  const stocks = [
+    { symbol: "AAPL", name: "Apple Inc.", price: 195.34, change: +1.23 },
+    { symbol: "MSFT", name: "Microsoft Corp.", price: 370.12, change: -0.85 },
+    { symbol: "TSLA", name: "Tesla Inc.", price: 245.67, change: +3.01 }
+  ];
+
+  const board = document.getElementById("stock-board");
+
+  stocks.forEach(s => {
+    const card = document.createElement("div");
+    card.className = "stock-card";
+    card.innerHTML = `
+      <div class="stock-left">
+        <div class="stock-symbol">${s.symbol}</div>
+        <div class="stock-name">${s.name}</div>
+      </div>
+      <div class="stock-right">
+        <div class="stock-price">${s.price.toFixed(2)}</div>
+        <div class="stock-change ${s.change >= 0 ? "pos" : "neg"}">
+          ${s.change >= 0 ? "+" : ""}${s.change.toFixed(2)}%
+        </div>
+      </div>
+    `;
+    board.appendChild(card);
+  });
+</script>
+</body>
+</html>
