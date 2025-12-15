@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Deck News</title>
+  <title>Deck News (RSS)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -68,6 +68,7 @@
     .header-meta {
       font-size: 10px;
       color: var(--muted);
+      text-align: right;
     }
 
     .news-list {
@@ -76,8 +77,8 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding-right: 3px;
+      gap: 10px;
+      padding-right: 4px;
     }
 
     .message {
@@ -89,7 +90,7 @@
       border-radius: 12px;
       padding: 10px 12px;
       background: var(--card-bg);
-      transition: background 0.12s ease, transform 0.08s ease;
+      transition: background 0.15s ease, transform 0.08s ease;
       cursor: pointer;
     }
 
@@ -130,14 +131,6 @@
       letter-spacing: 0.12em;
     }
 
-    .source {
-      font-weight: 500;
-    }
-
-    .time {
-      opacity: 0.8;
-    }
-
     .desc {
       font-size: 12px;
       color: rgba(255,255,255,0.8);
@@ -149,11 +142,8 @@
       .shell {
         padding: 10px 10px 8px;
       }
-      .title {
-        font-size: 12px;
-      }
       .desc {
-        display: none; /* tighter on tiny frames */
+        display: none; /* tighter on tiny spaces */
       }
     }
   </style>
@@ -163,119 +153,118 @@
     <div class="header">
       <div class="header-left">
         <div class="dot"></div>
-        <div class="header-main" id="heading-label">
-          Top Headlines
-        </div>
+        <div class="header-main" id="heading-label">Latest News</div>
       </div>
-      <div class="header-meta" id="heading-meta">
-        Loading…
-      </div>
+      <div class="header-meta" id="heading-meta">Loading…</div>
     </div>
 
     <div id="news-list" class="news-list">
-      <div class="message">Loading latest headlines…</div>
+      <div class="message">Loading headlines…</div>
     </div>
   </div>
 
   <script>
-    // You can change defaults via URL params: ?country=gb&category=technology
-    const params   = new URLSearchParams(window.location.search);
-    const country  = (params.get("country")  || "us").toLowerCase();
-    const category = (params.get("category") || "general").toLowerCase();
+    /**
+     * CONFIG
+     * ------------------------------------------------------------------
+     * Change RSS_URL to any RSS/Atom feed you like.
+     * Examples:
+     *   BBC World:  https://feeds.bbci.co.uk/news/world/rss.xml
+     *   BBC Top:    https://feeds.bbci.co.uk/news/rss.xml
+     *   Reuters:    https://feeds.reuters.com/reuters/topNews
+     */
+    const RSS_URL_DEFAULT = "https://feeds.bbci.co.uk/news/rss.xml";
 
-    const API_URL =
-      `https://saurav.tech/NewsAPI/top-headlines/category/${encodeURIComponent(category)}/${encodeURIComponent(country)}.json`;
+    // Allow overriding via ?rss=... in the iframe src
+    const params = new URLSearchParams(window.location.search);
+    const RSS_URL = params.get("rss") || RSS_URL_DEFAULT;
 
-    const newsList     = document.getElementById("news-list");
-    const heading      = document.getElementById("heading-label");
+    // We use rss2json public endpoint (no API key) to dodge CORS + XML parsing.
+    const API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" +
+      encodeURIComponent(RSS_URL);
+
+    const headingLabel = document.getElementById("heading-label");
     const headingMeta  = document.getElementById("heading-meta");
+    const newsList     = document.getElementById("news-list");
 
-    heading.textContent = `Top ${category} news (${country.toUpperCase()})`;
+    headingLabel.textContent = "Latest News (RSS)";
 
-    function formatTime(isoString) {
-      if (!isoString) return "";
-      const d = new Date(isoString);
-      if (isNaN(d.getTime())) return "";
+    function formatTime(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return "";
+      const diffSec = (Date.now() - d.getTime()) / 1000;
 
-      const now   = new Date();
-      const diff  = (now - d) / 1000; // seconds
-      if (diff < 60)          return "just now";
-      if (diff < 3600)        return `${Math.floor(diff / 60)} min ago`;
-      if (diff < 86400)       return `${Math.floor(diff / 3600)} h ago`;
-      if (diff < 86400 * 7)   return `${Math.floor(diff / 86400)} d ago`;
+      if (diffSec < 60)   return "just now";
+      if (diffSec < 3600) return Math.floor(diffSec / 60) + " min ago";
+      if (diffSec < 86400) return Math.floor(diffSec / 3600) + " h ago";
+      if (diffSec < 86400 * 7) return Math.floor(diffSec / 86400) + " d ago";
 
       return d.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
+        year: "numeric", month: "short", day: "numeric"
       });
     }
 
     async function loadNews() {
-      newsList.innerHTML = '<div class="message">Loading latest headlines…</div>';
+      newsList.innerHTML = '<div class="message">Loading headlines…</div>';
       headingMeta.textContent = "Fetching…";
 
       try {
         const res = await fetch(API_URL);
-        if (!res.ok) {
-          throw new Error("HTTP " + res.status);
-        }
-
+        if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
-        const articles = (data && data.articles) || [];
 
-        if (!articles.length) {
-          newsList.innerHTML = '<div class="message">No news articles returned.</div>';
-          headingMeta.textContent = "No results";
+        const items = data.items || [];
+        const feedTitle = data.feed && data.feed.title ? data.feed.title : "RSS Feed";
+
+        headingLabel.textContent = feedTitle;
+        headingMeta.textContent = `Updated • ${items.length} stories`;
+
+        if (!items.length) {
+          newsList.innerHTML = '<div class="message">No items in feed.</div>';
           return;
         }
 
-        headingMeta.textContent = `Updated • ${articles.length} stories`;
-
         newsList.innerHTML = "";
-        articles.slice(0, 20).forEach(article => {
+
+        // Show up to 25 latest items
+        items.slice(0, 25).forEach(item => {
           const div = document.createElement("div");
           div.className = "card";
 
-          const sourceName = article.source && article.source.name
-            ? article.source.name
-            : "Unknown source";
-
-          const published = formatTime(article.publishedAt);
+          const title = item.title || "Untitled";
+          const link  = item.link || "#";
+          const desc  = item.description || "";
+          const pub   = item.pubDate ? formatTime(item.pubDate) : "";
+          const author = item.author || data.feed?.author || "";
 
           div.innerHTML = `
-            <h2 class="title">
-              <a href="${article.url}" target="_blank" rel="noopener noreferrer">
-                ${article.title || "Untitled article"}
+            <div class="title">
+              <a href="${link}" target="_blank" rel="noopener noreferrer">
+                ${title}
               </a>
-            </h2>
-            <div class="meta-row">
-              <span class="source">${sourceName}</span>
-              ${published ? `<span class="time">${published}</span>` : ""}
-              <span class="pill">${country.toUpperCase()}</span>
-              <span class="pill">${category}</span>
             </div>
-            ${article.description
-              ? `<div class="desc">${article.description}</div>`
-              : ""}
+            <div class="meta-row">
+              ${author ? `<span>${author}</span>` : ""}
+              ${pub ? `<span>${pub}</span>` : ""}
+              <span class="pill">RSS</span>
+            </div>
+            ${desc ? `<div class="desc">${desc}</div>` : ""}
           `;
 
-          // Make whole card clickable
           div.addEventListener("click", () => {
-            if (article.url) {
-              window.open(article.url, "_blank", "noopener");
+            if (link && link !== "#") {
+              window.open(link, "_blank", "noopener");
             }
           });
 
           newsList.appendChild(div);
         });
-
       } catch (err) {
         console.error(err);
         newsList.innerHTML = `
           <div class="message">
-            Failed to load news feed.<br>
-            This may be due to your network blocking the API or being offline.
+            Failed to load RSS feed.<br>
+            Feed may be blocked, offline, or the proxy is down.
           </div>
         `;
         headingMeta.textContent = "Error";
