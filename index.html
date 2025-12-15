@@ -40,9 +40,9 @@ html, body {
   flex-direction: column;
 }
 
-/* TOP SCREEN */
+/* TOP SCREEN – now flexes to fill remaining height */
 .deck-screen {
-  flex: 3;
+  flex: 1 1 auto;
   padding: 20px;
   background: radial-gradient(circle at top, #262a34, #050608 60%);
   display: flex;
@@ -176,9 +176,9 @@ html, body {
   background: #000;
 }
 
-/* LOWER SHELL */
+/* LOWER SHELL – now auto height (no giant gray block) */
 .deck-shell {
-  flex: 1.1;
+  flex: 0 0 auto; /* key change: just big enough for strip + padding */
   background: linear-gradient(to bottom, var(--shell-bg-top), var(--shell-bg-bottom));
   padding: 14px 24px;
   display: flex;
@@ -227,7 +227,7 @@ html, body {
   background: var(--accent-soft);
 }
 
-/* KNOB – double-ring, centered highlight */
+/* KNOB – double ring, centered highlight */
 .dial-wrapper {
   display: flex;
   flex-direction: column;
@@ -242,7 +242,6 @@ html, body {
   border: none;
   cursor: pointer;
 
-  /* outer body */
   background: radial-gradient(circle at 30% 30%, #6d7078, #1b1c22);
   box-shadow:
     0 0 0 2px #000,
@@ -263,7 +262,7 @@ html, body {
     0 0 0 1px rgba(255,255,255,0.06);
 }
 
-/* center reflection (small, centered, no "eye") */
+/* centered reflection */
 .dial-button::after {
   content: "";
   position: absolute;
@@ -293,7 +292,7 @@ html, body {
   color: var(--muted);
 }
 
-/* small screen tweak */
+/* Small-screen tweaks */
 @media (max-width: 640px) {
   .grid-2 {
     grid-template-columns: 1fr;
@@ -403,7 +402,6 @@ html, body {
 
       <!-- MODE 4: SCORES -->
       <div class="screen-panel" data-mode="scores">
-        <!-- cache-busting query to avoid stale "Loading..." version -->
         <iframe class="scores-iframe" src="scores-nba.html?v=2" loading="lazy"></iframe>
       </div>
     </div>
@@ -467,7 +465,6 @@ document.getElementById("dial-button").addEventListener("click", () => {
   modeIndex = (modeIndex + 1) % modes.length;
   updatePanels();
 });
-
 updatePanels();
 
 /* CLOCK */
