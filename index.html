@@ -40,16 +40,18 @@ html, body {
   flex-direction: column;
 }
 
-/* TOP SCREEN (fills remaining height) */
+/* TOP SCREEN */
 .deck-screen {
   flex: 1 1 auto;
   padding: 20px;
   background: radial-gradient(circle at top, #262a34, #050608 60%);
-  overflow: hidden; /* keep scaled content contained */
+  display: flex;          /* important: flex container */
+  overflow: hidden;       /* keep scaled content contained */
 }
 
-/* NEW: inner wrapper that we scale */
+/* Inner wrapper that we scale */
 .deck-screen-inner {
+  flex: 1;                /* fill available height */
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -234,7 +236,7 @@ html, body {
   background: var(--accent-soft);
 }
 
-/* HI-FI KNOB – double rings, NO center circle now */
+/* HI-FI KNOB – double rings, NO center circle */
 .dial-wrapper {
   display: flex;
   flex-direction: column;
@@ -259,7 +261,7 @@ html, body {
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-/* Inner recessed disc (kept) */
+/* Inner recessed disc */
 .dial-button::before {
   content: "";
   position: absolute;
@@ -272,9 +274,8 @@ html, body {
     0 0 0 1px rgba(255,255,255,0.08);
 }
 
-/* Center circle REMOVED: no ::after */
+/* Center circle removed: no ::after */
 
-/* Pressed state */
 .dial-button:active {
   transform: translateY(1px);
   box-shadow:
@@ -455,17 +456,13 @@ function applyZoom() {
   deckScreenInner.style.transform = "scale(" + zoomLevel.toFixed(2) + ")";
 }
 
-// Capture Ctrl+wheel over the top area and stop page zoom
 deckScreen.addEventListener("wheel", (e) => {
-  if (!e.ctrlKey) return;           // only when Ctrl is held
-  e.preventDefault();               // stop browser's zoom
+  if (!e.ctrlKey) return;     // only zoom when Ctrl is held
+  e.preventDefault();         // stop browser's default zoom/scroll
+
   const STEP = 0.05;
-  if (e.deltaY < 0) {
-    zoomLevel += STEP;              // zoom in
-  } else {
-    zoomLevel -= STEP;              // zoom out
-  }
-  zoomLevel = Math.max(0.7, Math.min(1.4, zoomLevel)); // clamp
+  zoomLevel += (e.deltaY < 0 ? STEP : -STEP);
+  zoomLevel = Math.max(0.7, Math.min(1.4, zoomLevel));
   applyZoom();
 }, { passive: false });
 
