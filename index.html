@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deck Dash – Telemetry + Scores + Stocks + News</title>
+<title>Deck Dash – Telemetry + Scores + Stocks</title>
 
 <!-- Google Font: Roboto -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden; /* keep the dashboard as a single fixed screen */
+  overflow: hidden;
   background: #000;
   font-family: "Roboto", sans-serif;
   color: #fff;
@@ -45,9 +45,15 @@ html, body {
   flex: 1 1 auto;
   padding: 20px;
   background: radial-gradient(circle at top, #262a34, #050608 60%);
+  overflow: hidden; /* keep scaled content contained */
+}
+
+/* NEW: inner wrapper that we scale */
+.deck-screen-inner {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  transform-origin: top center;
 }
 
 /* HEADER */
@@ -84,14 +90,12 @@ html, body {
   font-feature-settings: "tnum";
 }
 
-/* PANELS WRAPPER */
+/* PANELS */
 .screen-panels {
   flex: 1;
   position: relative;
-  min-height: 0; /* important for nested flex + scroll */
 }
 
-/* INDIVIDUAL PANELS */
 .screen-panel {
   position: absolute;
   inset: 0;
@@ -170,20 +174,13 @@ html, body {
   background: rgba(255,255,255,0.2);
 }
 
-/* IFRAMES (NBA + Stocks + News) */
+/* IFRAMES (NBA + Stocks) */
 .scores-iframe {
   width: 100%;
   height: 100%;
   border: none;
   border-radius: 12px;
   background: #000;
-  display: block;
-}
-
-/* give iframe full height of panel in flex layout */
-.screen-panel > .scores-iframe {
-  flex: 1 1 auto;
-  min-height: 0;
 }
 
 /* LOWER SHELL – auto-sized (minimal gray) */
@@ -237,7 +234,7 @@ html, body {
   background: var(--accent-soft);
 }
 
-/* HI-FI KNOB – double rings, centered highlight */
+/* HI-FI KNOB – double rings, NO center circle now */
 .dial-wrapper {
   display: flex;
   flex-direction: column;
@@ -262,7 +259,7 @@ html, body {
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-/* Inner recessed disc */
+/* Inner recessed disc (kept) */
 .dial-button::before {
   content: "";
   position: absolute;
@@ -275,24 +272,9 @@ html, body {
     0 0 0 1px rgba(255,255,255,0.08);
 }
 
-/* Center cap / reflection */
-.dial-button::after {
-  content: "";
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background:
-    radial-gradient(circle at 30% 25%, #f4f4f7, #a7abb3 45%, #555862 80%);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.6),
-    0 4px 6px rgba(0,0,0,0.6);
-  opacity: 0.9;
-}
+/* Center circle REMOVED: no ::after */
 
+/* Pressed state */
 .dial-button:active {
   transform: translateY(1px);
   box-shadow:
@@ -323,126 +305,110 @@ html, body {
 
   <!-- TOP SCREEN -->
   <div class="deck-screen">
-    <div class="screen-header">
-      <div class="screen-header-title">
-        <div class="screen-header-dot"></div>
-        <div class="screen-header-mode" id="mode-label">System Overview</div>
+    <div class="deck-screen-inner">
+      <div class="screen-header">
+        <div class="screen-header-title">
+          <div class="screen-header-dot"></div>
+          <div class="screen-header-mode" id="mode-label">System Overview</div>
+        </div>
+        <div class="screen-header-time" id="header-clock">--:--:--</div>
       </div>
-      <div class="screen-header-time" id="header-clock">--:--:--</div>
-    </div>
 
-    <div class="screen-panels">
-      <!-- MODE 1: OVERVIEW -->
-      <div class="screen-panel active" data-mode="overview">
-        <div class="grid-2">
-          <div class="stat-card">
-            <div class="stat-header">CPU Threads</div>
-            <div class="stat-main">
-              <div class="stat-value" id="cpu-cores">--</div>
-              <div class="stat-unit">logical</div>
+      <div class="screen-panels">
+        <!-- MODE 1: OVERVIEW -->
+        <div class="screen-panel active" data-mode="overview">
+          <div class="grid-2">
+            <div class="stat-card">
+              <div class="stat-header">CPU Threads</div>
+              <div class="stat-main">
+                <div class="stat-value" id="cpu-cores">--</div>
+                <div class="stat-unit">logical</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-header">Device Memory</div>
+              <div class="stat-main">
+                <div class="stat-value" id="device-memory">--</div>
+                <div class="stat-unit">GB</div>
+              </div>
             </div>
           </div>
 
           <div class="stat-card">
-            <div class="stat-header">Device Memory</div>
+            <div class="stat-header">Uptime &amp; Platform</div>
             <div class="stat-main">
-              <div class="stat-value" id="device-memory">--</div>
-              <div class="stat-unit">GB</div>
+              <div class="stat-value" id="uptime-seconds">0</div>
+              <div class="stat-unit">sec</div>
+            </div>
+            <div class="pill-row">
+              <div class="pill pill-strong" id="ua-platform"></div>
+              <div class="pill" id="ua-browser"></div>
             </div>
           </div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-header">Uptime &amp; Platform</div>
-          <div class="stat-main">
-            <div class="stat-value" id="uptime-seconds">0</div>
-            <div class="stat-unit">sec</div>
-          </div>
-          <div class="pill-row">
-            <div class="pill pill-strong" id="ua-platform"></div>
-            <div class="pill" id="ua-browser"></div>
+        <!-- MODE 2: PERFORMANCE -->
+        <div class="screen-panel" data-mode="performance">
+          <div class="grid-2">
+            <div class="stat-card">
+              <div class="stat-header">Frames Per Second</div>
+              <div class="stat-main">
+                <div class="stat-value" id="fps-value">--</div>
+                <div class="stat-unit">fps</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-header">Frame Time</div>
+              <div class="stat-main">
+                <div class="stat-value" id="ms-per-frame">--</div>
+                <div class="stat-unit">ms</div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- MODE 2: PERFORMANCE -->
-      <div class="screen-panel" data-mode="performance">
-        <div class="grid-2">
-          <div class="stat-card">
-            <div class="stat-header">Frames Per Second</div>
-            <div class="stat-main">
-              <div class="stat-value" id="fps-value">--</div>
-              <div class="stat-unit">fps</div>
+        <!-- MODE 3: POWER / NETWORK -->
+        <div class="screen-panel" data-mode="power">
+          <div class="grid-2">
+            <div class="stat-card">
+              <div class="stat-header">Battery</div>
+              <div class="stat-main">
+                <div class="stat-value" id="battery-level">--</div>
+                <div class="stat-unit">%</div>
+              </div>
+              <div class="stat-sub" id="battery-status">Battery API unsupported.</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-header">Network</div>
+              <div class="stat-main">
+                <div class="stat-value" id="network-type">--</div>
+                <div class="stat-unit" id="network-downlink">--</div>
+              </div>
+              <div class="stat-sub" id="network-note">Network API unsupported.</div>
             </div>
           </div>
 
           <div class="stat-card">
-            <div class="stat-header">Frame Time</div>
-            <div class="stat-main">
-              <div class="stat-value" id="ms-per-frame">--</div>
-              <div class="stat-unit">ms</div>
+            <div class="stat-header">Visibility</div>
+            <div class="stat-sub" id="visibility-state">--</div>
+            <div class="pill-row">
+              <div class="pill pill-strong" id="visibility-pill">ACTIVE</div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- MODE 3: POWER / NETWORK -->
-      <div class="screen-panel" data-mode="power">
-        <div class="grid-2">
-          <div class="stat-card">
-            <div class="stat-header">Battery</div>
-            <div class="stat-main">
-              <div class="stat-value" id="battery-level">--</div>
-              <div class="stat-unit">%</div>
-            </div>
-            <div class="stat-sub" id="battery-status">Battery API unsupported.</div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-header">Network</div>
-            <div class="stat-main">
-              <div class="stat-value" id="network-type">--</div>
-              <div class="stat-unit" id="network-downlink">--</div>
-            </div>
-            <div class="stat-sub" id="network-note">Network API unsupported.</div>
-          </div>
+        <!-- MODE 4: NBA SCORES -->
+        <div class="screen-panel" data-mode="scores">
+          <iframe class="scores-iframe" src="scores-nba.html?v=2" loading="lazy"></iframe>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-header">Visibility</div>
-          <div class="stat-sub" id="visibility-state">--</div>
-          <div class="pill-row">
-            <div class="pill pill-strong" id="visibility-pill">ACTIVE</div>
-          </div>
+        <!-- MODE 5: STOCKS -->
+        <div class="screen-panel" data-mode="stocks">
+          <iframe class="scores-iframe" src="stocks.html" loading="lazy"></iframe>
         </div>
-      </div>
-
-      <!-- MODE 4: NBA SCORES -->
-      <div class="screen-panel" data-mode="scores">
-        <iframe
-          class="scores-iframe"
-          src="scores-nba.html?v=2"
-          loading="lazy"
-        ></iframe>
-      </div>
-
-      <!-- MODE 5: STOCKS -->
-      <div class="screen-panel" data-mode="stocks">
-        <iframe
-          class="scores-iframe"
-          src="stocks.html"
-          loading="lazy"
-          scrolling="yes"
-        ></iframe>
-      </div>
-
-      <!-- MODE 6: NEWS -->
-      <div class="screen-panel" data-mode="news">
-        <iframe
-          class="scores-iframe"
-          src="news.html"
-          loading="lazy"
-        ></iframe>
       </div>
     </div>
   </div>
@@ -480,15 +446,37 @@ html, body {
 </div>
 
 <script>
-/* MODES + KNOB */
-const modes = ["overview", "performance", "power", "scores", "stocks", "news"];
+/* ---------- CUSTOM CTRL+SCROLL ZOOM FOR TOP AREA ONLY ---------- */
+const deckScreen = document.querySelector(".deck-screen");
+const deckScreenInner = document.querySelector(".deck-screen-inner");
+let zoomLevel = 1;
+
+function applyZoom() {
+  deckScreenInner.style.transform = "scale(" + zoomLevel.toFixed(2) + ")";
+}
+
+// Capture Ctrl+wheel over the top area and stop page zoom
+deckScreen.addEventListener("wheel", (e) => {
+  if (!e.ctrlKey) return;           // only when Ctrl is held
+  e.preventDefault();               // stop browser's zoom
+  const STEP = 0.05;
+  if (e.deltaY < 0) {
+    zoomLevel += STEP;              // zoom in
+  } else {
+    zoomLevel -= STEP;              // zoom out
+  }
+  zoomLevel = Math.max(0.7, Math.min(1.4, zoomLevel)); // clamp
+  applyZoom();
+}, { passive: false });
+
+/* ---------- MODES + KNOB ---------- */
+const modes = ["overview","performance","power","scores","stocks"];
 const modeNames = {
   overview: "System Overview",
   performance: "Performance",
   power: "Power & Network",
   scores: "NBA Scores",
-  stocks: "Stocks",
-  news: "News"
+  stocks: "Stocks"
 };
 let modeIndex = 0;
 
@@ -497,10 +485,10 @@ const modeLabel = document.getElementById("mode-label");
 
 function updatePanels() {
   const mode = modes[modeIndex];
-  panels.forEach((p) =>
+  panels.forEach(p =>
     p.classList.toggle("active", p.dataset.mode === mode)
   );
-  modeLabel.textContent = modeNames[mode] || mode;
+  modeLabel.textContent = modeNames[mode];
 }
 
 document.getElementById("dial-button").addEventListener("click", () => {
@@ -509,48 +497,44 @@ document.getElementById("dial-button").addEventListener("click", () => {
 });
 updatePanels();
 
-/* CLOCK */
+/* ---------- CLOCK ---------- */
 function updateClock() {
   const now = new Date();
   document.getElementById("header-clock").textContent =
-    now.toLocaleTimeString("en-US", { hour12: false });
+    now.toLocaleTimeString("en-US",{hour12:false});
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-/* CPU THREADS */
+/* ---------- CPU THREADS ---------- */
 const cores = navigator.hardwareConcurrency || "--";
 document.getElementById("cpu-cores").textContent = cores;
 document.getElementById("status-cores").textContent = cores;
 
-/* MEMORY */
+/* ---------- MEMORY ---------- */
 if ("deviceMemory" in navigator) {
-  document.getElementById("device-memory").textContent =
-    navigator.deviceMemory;
+  document.getElementById("device-memory").textContent = navigator.deviceMemory;
 } else {
   document.getElementById("device-memory").textContent = "--";
 }
 
-/* UPTIME */
+/* ---------- UPTIME ---------- */
 const start = performance.now();
 setInterval(() => {
   const sec = (performance.now() - start) / 1000;
   document.getElementById("uptime-seconds").textContent = sec.toFixed(0);
 }, 1000);
 
-/* FPS + FRAME TIME */
+/* ---------- FPS + FRAME TIME ---------- */
 let lastFrameTime = performance.now();
 let frameCount = 0;
-function loop() {
-  frameCount++;
-  requestAnimationFrame(loop);
-}
+function loop() { frameCount++; requestAnimationFrame(loop); }
 requestAnimationFrame(loop);
 
 setInterval(() => {
   const now = performance.now();
   const delta = now - lastFrameTime;
-  const fps = (frameCount * 1000) / delta;
+  const fps = frameCount * 1000 / delta;
   lastFrameTime = now;
   frameCount = 0;
 
@@ -558,19 +542,18 @@ setInterval(() => {
   document.getElementById("fps-value").textContent = fpsText;
   document.getElementById("status-fps").textContent = fpsText;
   document.getElementById("ms-per-frame").textContent =
-    fps > 0 ? (1000 / fps).toFixed(1) : "--";
+    fps > 0 ? (1000/fps).toFixed(1) : "--";
 }, 1000);
 
-/* BATTERY */
+/* ---------- BATTERY ---------- */
 if (navigator.getBattery) {
-  navigator.getBattery().then((b) => {
+  navigator.getBattery().then(b => {
     function upd() {
       const pct = Math.round(b.level * 100);
       document.getElementById("battery-level").textContent = pct;
       document.getElementById("status-battery").textContent = pct + "%";
-      document.getElementById("battery-status").textContent = `${
-        b.charging ? "Charging" : "On Battery"
-      } · ${pct}%`;
+      document.getElementById("battery-status").textContent =
+        `${b.charging ? "Charging" : "On Battery"} · ${pct}%`;
     }
     upd();
     b.addEventListener("levelchange", upd);
@@ -578,61 +561,45 @@ if (navigator.getBattery) {
   });
 }
 
-/* NETWORK */
-const conn =
-  navigator.connection ||
-  navigator.mozConnection ||
-  navigator.webkitConnection;
+/* ---------- NETWORK ---------- */
+const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 if (conn) {
   function updNet() {
     const t = conn.effectiveType || "--";
     document.getElementById("network-type").textContent = t.toUpperCase();
     document.getElementById("status-network").textContent = t.toUpperCase();
-    document.getElementById("network-downlink").textContent = conn.downlink
-      ? conn.downlink.toFixed(1) + " Mbps"
-      : "--";
-    document.getElementById("network-note").textContent = `RTT ≈ ${
-      conn.rtt || "?"
-    } ms`;
+    document.getElementById("network-downlink").textContent =
+      conn.downlink ? conn.downlink.toFixed(1)+" Mbps" : "--";
+    document.getElementById("network-note").textContent =
+      `RTT ≈ ${conn.rtt || "?"} ms`;
   }
   updNet();
   conn.addEventListener("change", updNet);
 }
 
-/* VISIBILITY */
+/* ---------- VISIBILITY ---------- */
 function updVis() {
   const vis = document.visibilityState === "visible";
-  document.getElementById("visibility-state").textContent = vis
-    ? "Dashboard active"
-    : "Dashboard hidden";
-  document.getElementById("visibility-pill").textContent = vis
-    ? "ACTIVE"
-    : "HIDDEN";
+  document.getElementById("visibility-state").textContent =
+    vis ? "Dashboard active" : "Dashboard hidden";
+  document.getElementById("visibility-pill").textContent =
+    vis ? "ACTIVE" : "HIDDEN";
 }
 document.addEventListener("visibilitychange", updVis);
 updVis();
 
-/* UA PILLS */
+/* ---------- UA PILLS ---------- */
 const ua = navigator.userAgent;
 document.getElementById("ua-platform").textContent =
-  /Windows/i.test(ua)
-    ? "Windows"
-    : /Mac/i.test(ua)
-    ? "macOS"
-    : /Android/i.test(ua)
-    ? "Android"
-    : /iPhone|iPad/i.test(ua)
-    ? "iOS"
-    : "Unknown";
+  /Windows/i.test(ua) ? "Windows" :
+  /Mac/i.test(ua) ? "macOS" :
+  /Android/i.test(ua) ? "Android" :
+  /iPhone|iPad/i.test(ua) ? "iOS" : "Unknown";
 
 document.getElementById("ua-browser").textContent =
-  /Chrome/i.test(ua)
-    ? "Chrome"
-    : /Firefox/i.test(ua)
-    ? "Firefox"
-    : /Safari/i.test(ua) && !/Chrome/i.test(ua)
-    ? "Safari"
-    : "Unknown";
+  /Chrome/i.test(ua) ? "Chrome" :
+  /Firefox/i.test(ua) ? "Firefox" :
+  /Safari/i.test(ua) && !/Chrome/i.test(ua) ? "Safari" : "Unknown";
 </script>
 </body>
 </html>
