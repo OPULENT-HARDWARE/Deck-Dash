@@ -444,14 +444,38 @@ const deckScreen = document.querySelector(".deck-screen");
 const deckScreenInner = document.querySelector(".deck-screen-inner");
 let zoomLevel = 1;
 
-deckScreen.addEventListener("wheel", (e) => {
-  if (!e.altKey) return;  // only Alt + scroll
-  e.preventDefault();
-  const STEP = 0.05;
-  zoomLevel += (e.deltaY < 0 ? STEP : -STEP);
+function applyZoom() {
   zoomLevel = Math.max(0.7, Math.min(1.4, zoomLevel));
   deckScreenInner.style.transform = "scale(" + zoomLevel.toFixed(2) + ")";
+}
+
+// Alt + scroll: up = zoom in, down = zoom out
+deckScreen.addEventListener("wheel", (e) => {
+  if (!e.altKey) return;      // only when Alt is held
+  e.preventDefault();
+
+  const STEP = 0.05;
+
+  // Standard convention: deltaY < 0 = scroll up, > 0 = scroll down
+  if (e.deltaY < 0) {
+    // scroll up -> zoom in
+    zoomLevel += STEP;
+  } else if (e.deltaY > 0) {
+    // scroll down -> zoom out
+    zoomLevel -= STEP;
+  }
+
+  applyZoom();
 }, { passive: false });
+
+// Double-click top area to reset zoom
+deckScreen.addEventListener("dblclick", () => {
+  zoomLevel = 1;
+  applyZoom();
+});
+
+
+  
 
 /* ---------- MODES + KNOB ---------- */
 const modes = ["overview","performance","power","scores","stocks","reddit","news"];
